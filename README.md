@@ -33,19 +33,19 @@ The assumed file structure is all within the “address” file:
 Address
 - Code
 - Data_store
-	o CentredAndUncentred
-	o CentredAndUncentred_Train
-	o CentredAndUncentred_Test
-	o GMM_classes_depth
-	o GMM_classes_reduced
-	o GMM_classes_uncentred
-	o Info
-	o Labels
-	o PCA
-	o PCA_train
-	o Probabilities
-	o Reconstruction
-	o Reconstruction_Train
+	- CentredAndUncentred
+	- CentredAndUncentred_Train
+	- CentredAndUncentred_Test
+	- GMM_classes_depth
+	- GMM_classes_reduced
+	- GMM_classes_uncentred
+	- Info
+	- Labels
+	- PCA
+	- PCA_train
+	- Probabilities
+	- Reconstruction
+	- Reconstruction_Train
 - Objects
 - Plots
 - Results
