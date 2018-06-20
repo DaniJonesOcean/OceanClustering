@@ -36,7 +36,7 @@ start_time = time.clock()
 """ Define some initial conditions, locations and parameters """
 n_comp = 6                # number of classes in GMM object
 n_dimen = 0.999           # amount of variance retained in PCA
-cov_type = 'spherical'    # specify covariance type (full, tied, diag, or spherical)
+cov_type = 'full'    # specify covariance type (full, tied, diag, or spherical)
 loop = False              # do we want to loop the program
 if loop:
     runIndex_total = 25   # number of times we want to loop
@@ -47,7 +47,7 @@ filename_raw_data = "/data/expose/OceanClustering/Data_in/SO_Argo_all.mat"   # l
 address_fronts = "/data/expose/OceanClustering/Data_in/Fronts/"
 
 # Define some flags relevant for BIC calculations
-run_bic = True        # do we want to calculate the BIC scores ?
+run_bic = False       # do we want to calculate the BIC scores ?
 if run_bic:
     subsample_bic = "uniform"
     repeat_bic = 50
@@ -84,7 +84,10 @@ fraction_nan_depths = 32.0  # If a depth level across all samples has " " " ", i
 def main(runIndex=None):
     print("Starting Main.main()")  
     
-    # Now start the GMM process
+    # if it doesn't exist, create directory structure
+    makeDirectoryStructure(address)
+
+    # now start the GMM process
     Load.main(address, filename_raw_data, runIndex, subsample_uniform, subsample_random,\
                subsample_inTime, grid, conc, fraction_train, inTime_start, inTime_finish,\
                fraction_nan_samples, fraction_nan_depths, cov_type, run_bic=False)
@@ -119,6 +122,78 @@ def main(runIndex=None):
     Plot.plotProfile(address, runIndex, 'uncentred')
     
     Plot.plotWeights(address, runIndex)
+
+""" Create directory structure if it does not exist """
+def makeDirectoryStructure(address):
+    import os
+    # make Data_store
+    mydir = address+"Data_store/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make Objects directory
+    mydir = address+"Objects/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make Plots directory
+    mydir = address+"Plots/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make Results directory
+    mydir = address+"Results/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make various Data_store subdirectories
+    mydir = address+"Data_store/"+"CentredAndUncentred/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make various Data_store subdirectories
+    mydir = address+"Data_store/"+"CentredAndUncentred_Train/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make various Data_store subdirectories
+    mydir = address+"Data_store/"+"CentredAndUncentred_Test/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make various Data_store subdirectories
+    mydir = address+"Data_store/"+"GMM_classes_depth/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make various Data_store subdirectories
+    mydir = address+"Data_store/"+"GMM_classes_reduced/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make various Data_store subdirectories
+    mydir = address+"Data_store/"+"GMM_classes_uncentred/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make various Data_store subdirectories
+    mydir = address+"Data_store/"+"Info/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make various Data_store subdirectories
+    mydir = address+"Data_store/"+"Labels/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make various Data_store subdirectories
+    mydir = address+"Data_store/"+"PCA/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make various Data_store subdirectories
+    mydir = address+"Data_store/"+"PCA_Train/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make various Data_store subdirectories
+    mydir = address+"Data_store/"+"Probabilities/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make various Data_store subdirectories
+    mydir = address+"Data_store/"+"Reconstruction/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
+    # make various Data_store subdirectories
+    mydir = address+"Data_store/"+"Reconstruction_Train/"
+    if not os.path.exists(mydir):
+        os.makedirs(mydir)
     
 """ Opt to runIndex different sections or variations of the program """
 

@@ -25,7 +25,7 @@ Library requirements:
 - Cartopy 0.15.1 (for creating stereographic projection maps)
 
 Assumed file structure:
-The program takes three input addresses and then assumes a certain file structure beyond this point.
+The program takes three input addresses and then assumes a certain file structure beyond this point. If the directories do not already exist, the program automatically creates them. It does not create the "Data_in" or "Fronts" directories, though. It only creates the ones listed below.
 - address = location for storing the outputs of the program
 - filename_raw_data = location of the raw data in a .mat file
 - address_fronts = location of the front data in .txt files
@@ -42,7 +42,7 @@ Address
 	- Info
 	- Labels
 	- PCA
-	- PCA_train
+	- PCA_Train
 	- Probabilities
 	- Reconstruction
 	- Reconstruction_Train
