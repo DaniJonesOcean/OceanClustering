@@ -24,23 +24,26 @@ import Print
 
 start_time = time.clock()
 
-
 def main(address, filename_raw_data, run, subsample_uniform, subsample_random,\
          subsample_inTime, grid, conc, fraction_train, inTime_start, inTime_finish,\
-         fraction_nan_samples, fraction_nan_depths, run_Bic=False):
+         fraction_nan_samples, fraction_nan_depths, cov_type, run_bic=False):
     print("Starting Load.main")
     """ Main function for module"""
     lon, lat, dynHeight, Tint, Sint, varTime = load(filename_raw_data)
+    print("Removing depths with high NaN counts")
     Tint, Sint, depth = removeDepthFractionNan(Tint, Sint, fraction_nan_depths)
+    print("Removing profiles with high NaN counts")
     lon, lat, dynHeight, Tint, Sint, varTime = removeSampleFractionNan(lon, lat, dynHeight, Tint, Sint, varTime, fraction_nan_samples)
+    print("Dealing with remaining NaN values")
     Tint, Sint = dealwithNan(Tint, Sint)
     
     ## At this point the data has been successfully cleaned.
     """ Now I need to subselect the training data """
+    print("Selecting subset of data that will be used as training data")
     Tint_train, Sint_train, varTime_train = None, None, None
-    if subsample_uniform: # Currently the only option working 
+    if subsample_uniform: # Currently working 
         lon_train, lat_train, dynHeight_train, Tint_train, Sint_train, varTime_train = uniformTrain(lon, lat, dynHeight, Tint, Sint, varTime, depth, grid, conc)
-    if subsample_random: # Now also written and working
+    if subsample_random: # Also working
         lon_train, lat_train, dynHeight_train, Tint_train, Sint_train, varTime_train = randomTrain(lon, lat, dynHeight, Tint, Sint, varTime, depth, fraction_train)
     if subsample_inTime:
         lon_train, lat_train, dynHeight_train, Tint_train, Sint_train, varTime_train = inTimeTrain(lon, lat, dynHeight, Tint, Sint, varTime, depth, inTime_start, inTime_finish)
@@ -50,6 +53,7 @@ def main(address, filename_raw_data, run, subsample_uniform, subsample_random,\
     # NOTE: currently unsure how to include Sint in the centring
     # I also change the nomenaculature at this point in the code
     """ It is important that the training data set initialises the standardised object !! """
+    print("Centre and standardise the training dataset")
     stand, stand_store, varTrain_centre = centreAndStandardise(address, run, Tint_train)
     var_centre = stand.transform(Tint)  # Centre the full dataset based on the training data set
     
@@ -72,7 +76,7 @@ def main(address, filename_raw_data, run, subsample_uniform, subsample_random,\
     """ Now we can print the results of this process to a file for later use """
 #    print("Starting Print")
     print("varTrain_centre.shape = ", varTrain_centre.shape)
-    if not run_Bic:
+    if not run_bic:
         Print.printLoadToFile(address, run, lon, lat, dynHeight, Tint, var_centre, Sint, varTime, \
                               depth)
         Print.printLoadToFile_Train(address, run, lon_train, lat_train, dynHeight_train, Tint_train, \
@@ -81,7 +85,7 @@ def main(address, filename_raw_data, run, subsample_uniform, subsample_random,\
         #                        varTest_centre, Sint_test, varTime_test, depth)
         Print.printDepth(address, run, depth)
     
-    if run_Bic:
+    if run_bic:
         return lon_train, lat_train, dynHeight_train, Tint_train, varTrain_centre, Sint_train, varTime_train
     
 ###############################################################################
@@ -89,11 +93,13 @@ def main(address, filename_raw_data, run, subsample_uniform, subsample_random,\
 def load(filename_raw_data):
     print("Load.load")
     """ This function loads the raw data from a .mat file """
+
+    # declare variables as empty arrays
     lon, lat, dynHeight, Tint, Sint, varTime = [], [], [], [], [], []
-    # Import lon, lat, Temperature, Salinity, times, and dynamic height explicitly
+
+    # import lon, lat, Temperature, Salinity, times, and dynamic height explicitly
     variables = ['lon', 'lat', 'dynht300_1500', 'Tint', 'Sint', 'dectime']
     mat = h5py.File(filename_raw_data, variable_names = variables)
-    
     lon = mat["lon"]
     lon = np.array(lon)[:,0]
     lat = mat["lat"]
@@ -107,8 +113,7 @@ def load(filename_raw_data):
     varTime = mat["dectime"]
     varTime = np.array(varTime)
     
-    
-    print("Shape of variable = ", Tint.shape)
+#   print("Shape of variable = ", Tint.shape)
 #    print("axis 0 = ", np.ma.size(Tint, axis=0)) # axis 0 should be ~290520
 #    print("axis 1 = ", np.ma.size(Tint, axis=1)) # axis 1 should be ~400
     
@@ -117,6 +122,7 @@ def load(filename_raw_data):
 def removeDepthFractionNan(VAR, VAR2, fraction_of):
     print("Load.removeDepthFractionNan")
     """ This function removes all depths will a given number of Nan values """
+
     delete_depth = []
     depth_remain = 5 * np.arange(np.ma.size(VAR, axis=1)) # Create a pressure array to record the pressure of the depths kept in data
     
@@ -171,6 +177,8 @@ def dealwithNan(VAR, VAR2):
     """ Simple Linear interpolator to deal with th eremaining Nan valus """
     print("total number of values before nan interpolation = ", np.size(VAR))
     print("number of nans before nan interpolation = ",np.isnan(VAR).sum())
+
+    # loop over array
     for i in range(np.ma.size(VAR, axis=0)):
         mask = []
         VAR_temp = []
@@ -178,7 +186,8 @@ def dealwithNan(VAR, VAR2):
         mask = np.isnan(VAR_temp)
         VAR_temp[mask] = np.interp(np.flatnonzero(mask), np.flatnonzero(~mask), VAR_temp[~mask])
         VAR[i,:] = VAR_temp
-    
+
+    # loop over array    
     for i in range(np.ma.size(VAR2, axis=0)):
         mask2 = []
         VAR2_temp = []

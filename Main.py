@@ -34,18 +34,20 @@ import Plot
 start_time = time.clock()
 
 """ Define some initial conditions, locations and parameters """
-n_comp = 6         # Number of classes in GMM object
-n_dimen = 0.999     # Amount of variance retained in PCA
-loop = False        # Do we want to loop the program
+n_comp = 6                # number of classes in GMM object
+n_dimen = 0.999           # amount of variance retained in PCA
+cov_type = 'spherical'    # specify covariance type (full, tied, diag, or spherical)
+loop = False              # do we want to loop the program
 if loop:
-    runIndex_total = 25  # Number of times we want to loop
+    runIndex_total = 25   # number of times we want to loop
 
-address = "/Users/dcjones3/Documents/OceanClusteringTools/"     # Location of Program
-filename_raw_data = "/Users/dcjones3/Documents/OceanClusteringTools/Data_in/SO_Argo_all.mat"   # Location of raw data
-address_fronts = "/Users/dcjones3/Documents/OceanClusteringTools/Data_in/Fronts/"
+# set locations
+address = "/data/expose/OceanClustering/"     # location of program
+filename_raw_data = "/data/expose/OceanClustering/Data_in/SO_Argo_all.mat"   # location of raw data
+address_fronts = "/data/expose/OceanClustering/Data_in/Fronts/"
 
-# Define some booleans to determine what the program should do
-run_bic = True         # Do we want to calculate the BIC scores ?
+# Define some flags relevant for BIC calculations
+run_bic = True        # do we want to calculate the BIC scores ?
 if run_bic:
     subsample_bic = "uniform"
     repeat_bic = 50
@@ -57,7 +59,10 @@ if run_bic:
 subsample_uniform = True  # Indicates how the Training dataset is selected
 subsample_random = False  # Indicates how the Training dataset is selected
 subsample_inTime = False
+
+# declare some empty variables
 grid, conc, fraction_train, inTime_start, inTime_finish = None, None, None, None, None
+
 if subsample_uniform:
     grid = 1        # size of cell in lat/lon degrees
     conc = 1    # # of samples from each grid
@@ -81,21 +86,22 @@ def main(runIndex=None):
     
     # Now start the GMM process
     Load.main(address, filename_raw_data, runIndex, subsample_uniform, subsample_random,\
-               subsample_inTime, grid, conc, fraction_train, inTime_start, inTime_finish, fraction_nan_samples, fraction_nan_depths)
+               subsample_inTime, grid, conc, fraction_train, inTime_start, inTime_finish,\
+               fraction_nan_samples, fraction_nan_depths, cov_type, run_bic=False)
 
     # loads data, selects Train, cleans, centres/standardises, prints
-    PCA.create(address, runIndex, n_dimen)     # Uses Train to create PCA, prints results, stores object
-    GMM.create(address, runIndex, n_comp)      # Uses Train to create GMM, prints results, stores object
+    PCA.create(address, runIndex, n_dimen)     # uses train to create PCA, prints results, stores object
+    GMM.create(address, runIndex, n_comp, cov_type)      # uses train to create GMM, prints results, stores object
    
-    PCA.apply(address, runIndex)               # Applies PCA to test dataset     
-    GMM.apply(address, runIndex, n_comp)       # Applies GMM to test dataset
+    PCA.apply(address, runIndex)               # applies PCA to test dataset     
+    GMM.apply(address, runIndex, n_comp)       # applies GMM to test dataset
     
-    # Reconstruction
-    Reconstruct.gmm_reconstruct(address, runIndex, n_comp)  # Reconstructs the results in original space
+    # reconstruction
+    Reconstruct.gmm_reconstruct(address, runIndex, n_comp)  # reconstructs the results in original space
     Reconstruct.full_reconstruct(address, runIndex)
     Reconstruct.train_reconstruct(address, runIndex)
     
-    # Plotting
+    # plotting
     Plot.plotMapCircular(address, address_fronts, runIndex, n_comp)
 
     Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp)
@@ -141,7 +147,8 @@ def loopMain(runIndex_total):
 
 if run_bic:
     Bic.main(address, filename_raw_data,subsample_bic, repeat_bic, max_groups, \
-             grid_bic, conc_bic, size_bic, n_dimen, fraction_nan_samples, fraction_nan_depths)
+             grid_bic, conc_bic, size_bic, n_dimen, fraction_nan_samples, \
+             fraction_nan_depths, cov_type)
     
     Plot.plotBIC(address, repeat_bic, max_groups)
 elif loop:

@@ -26,7 +26,7 @@ import Print
 start_time = time.clock()
 
 def main(address, filename_raw_data, subsample_bic, repeat_bic, max_groups, grid_bic,\
-         conc_bic, size_bic, n_dimen, fraction_nan_samples, fraction_nan_depths):
+         conc_bic, size_bic, n_dimen, fraction_nan_samples, fraction_nan_depths, cov_type):
     
     bic_many = np.ones((repeat_bic,max_groups-1)) # Need to use (max_groups-1) as the bic runs from 1 to max_groups 
     n_lowest_array = np.zeros(repeat_bic)
@@ -34,7 +34,7 @@ def main(address, filename_raw_data, subsample_bic, repeat_bic, max_groups, grid
     for i in range(0,repeat_bic):
         print("Starting ", i)
         bic = bic_oneRun(address, filename_raw_data, subsample_bic, repeat_bic, max_groups, grid_bic,\
-                   conc_bic, size_bic, n_dimen, fraction_nan_samples, fraction_nan_depths)
+                   conc_bic, size_bic, n_dimen, fraction_nan_samples, fraction_nan_depths, cov_type)
         bic_many[i,:] = bic[0]
         n_lowest_array[i] = bic[1]
         if i == 0 :
@@ -70,34 +70,34 @@ def main(address, filename_raw_data, subsample_bic, repeat_bic, max_groups, grid
   
 ###############################################################################
 def bic_oneRun(address, filename_raw_data, subsample_bic, repeat_bic, max_groups, grid_bic,\
-         conc_bic, size_bic, n_dimen, fraction_nan_samples, fraction_nan_depths):
+         conc_bic, size_bic, n_dimen, fraction_nan_samples, fraction_nan_depths, cov_type):
 
-    # Load the training data
+    # load the training data
     lon_train, lat_train, dynHeight_train, Tint_train, varTrain_centre, Sint_train, varTime_train \
             = None, None, None, None, None, None, None
     lon_train, lat_train, dynHeight_train, Tint_train, varTrain_centre, Sint_train, varTime_train \
         = Load.main(address, filename_raw_data, None, subsample_bic, False,\
          False, grid_bic, conc_bic, None, None, None,\
-         fraction_nan_samples, fraction_nan_depths, run_Bic=True)
+         fraction_nan_samples, fraction_nan_depths, cov_type, run_bic=True)
     
-    # Calculate PCA
+    # calculate PCA
     pca, X_pca_train = None, None
     pca = decomposition.PCA(n_components = n_dimen)     # Initialise PCA object
     pca.fit(varTrain_centre)                         # Fit the PCA to the training data
     X_pca_train = pca.transform(varTrain_centre) 
     del pca
     
-    # Run BIC for GMM with different number of components
+    # run BIC for GMM with different number of components
     # bic_values contains the array of scores for the different n_comp
     # n_lowest is the lowest n for each repeat
     # n_comp_array is from 0 to max_groups in integers
     bic_values, n_lowest, n_comp_array = None, None, None
-    bic_values, n_lowest, n_comp_array = bic_calculate(X_pca_train, max_groups)
+    bic_values, n_lowest, n_comp_array = bic_calculate(X_pca_train, max_groups, cov_type)
     
     return bic_values, n_lowest, n_comp_array
 
 ###############################################################################
-def bic_calculate(X, max_groups):
+def bic_calculate(X, max_groups, cov_type):
 #    print("BIC X shape = ",X.shape)
     X = X.reshape(-1,1)
 #    print("BIC X.reshape shape = ", X.shape)
@@ -105,8 +105,12 @@ def bic_calculate(X, max_groups):
     n_components_range = np.arange(1, max_groups)
     for n_components in n_components_range:
 #        print("BIC n_comp = ",n_components)
-        gmm = mixture.GaussianMixture(n_components = n_components, covariance_type = 'diag')
+
+        # create GMM object
+        gmm = mixture.GaussianMixture(n_components = n_components, covariance_type = cov_type)
+        # fit test dataset to GMM 
         gmm.fit(X)
+        # append to results array
         bic_score.append(gmm.bic(X))
         if bic_score[-1] < lowest_bic:
             lowest_bic = bic_score[-1]
@@ -114,4 +118,4 @@ def bic_calculate(X, max_groups):
     bic_score = np.asarray(bic_score).reshape(1,-1)
     return bic_score, lowest_n, n_components_range
 
-print('Bic runtime = ', time.clock() - start_time,' s')
+print('BIC runtime = ', time.clock() - start_time,' s')

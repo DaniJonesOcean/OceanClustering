@@ -85,10 +85,10 @@ def plotMapCircular(address, address_fronts, runIndex, n_comp, plotFronts=True):
     
 def loadFronts(address_fronts):
     SAF, SACCF, SBDY, PF = None, None, None, None
-    SAF =   np.loadtxt(address_fronts+'saf.txt')
-    SACCF = np.loadtxt(address_fronts+'saccf.txt')
-    SBDY =  np.loadtxt(address_fronts+'sbdy.txt')
-    PF =    np.loadtxt(address_fronts+'pf.txt')
+    SAF =   np.loadtxt(address_fronts+'saf_kim.txt')
+    SACCF = np.loadtxt(address_fronts+'saccf_kim.txt')
+    SBDY =  np.loadtxt(address_fronts+'sbdy_kim.txt')
+    PF =    np.loadtxt(address_fronts+'pf_kim.txt')
     
     return SAF, SACCF, SBDY, PF
 
@@ -458,18 +458,18 @@ def plotBIC(address, repeat_bic, max_groups, trend=True):
         initial_guess = [47030, 1.553, 23080, 0.0004652]
         def expfunc(x, a, b, c, d):
             return (a * np.exp(-b * x)) + (c * np.exp(d * x))
+    
+        # Commented out exponential fit (it looks terrible)    
+        #popt, pcov, x, y = None, None, None, None
+        #popt, pcov = curve_fit(expfunc, n_comp_array, bic_mean, p0 = initial_guess, maxfev=10000)
+        #print("Exponential Parameters = ", *popt)
+        #x = np.linspace(1, max_groups, 100)
+        #y = expfunc(x, *popt)
+        #ax1.plot(x, y, 'r-', label="Exponential Fit")
         
-        popt, pcov, x, y = None, None, None, None
-        popt, pcov = curve_fit(expfunc, n_comp_array, bic_mean, p0 = initial_guess, maxfev=10000)
-        print("Exponential Parameters = ", *popt)
-        x = np.linspace(1, max_groups, 100)
-        y = expfunc(x, *popt)
-        ax1.plot(x, y, 'r-', label="Exponential Fit")
-        
-        y_min_index = np.where(y==y.min())[0]
-        x_min = (x[y_min_index])[0]
-        ax1.axvline(x=x_min, linestyle=':', color='black', label = 'Exponential Fit min = '+str(np.round_(x_min, decimals=1)))
-
+        #y_min_index = np.where(y==y.min())[0]
+        #x_min = (x[y_min_index])[0]
+        #ax1.axvline(x=x_min, linestyle=':', color='black', label = 'Exponential Fit min = '+str(np.round_(x_min, decimals=1)))
 
     # Plot the individual and minimum values
     ax1.axvline(x=n_mean, linestyle='--', color='black', label = 'n_mean_min = '+str(n_mean))

@@ -21,7 +21,7 @@ import Print
 
 start_time = time.clock()
 
-def create(address, run, n_comp):
+def create(address, run, n_comp, cov_type):
     print("GMM.create")
     """ Takes the training dataset and creates the GMM object """
     # Load col_reduced
@@ -35,7 +35,7 @@ def create(address, run, n_comp):
     
     # Calculate GMM Object
     gmm, gmm_weights, gmm_means, gmm_covariances = None, None, None, None
-    gmm, gmm_weights, gmm_means, gmm_covariances = GaussianMixtureModel(address, run, n_comp, X_train_array)
+    gmm, gmm_weights, gmm_means, gmm_covariances = GaussianMixtureModel(address, run, n_comp, X_train_array, cov_type)
     
     """ Print the information on the classes to a file """
     class_number_array = np.arange(0,n_comp).reshape(-1,1)
@@ -69,11 +69,11 @@ def apply(address, run, n_comp):
     Print.printPosteriorProb(address, run, lon, lat, dynHeight, varTime, post_prob, class_number_array)
     
     
-def GaussianMixtureModel(address, run, n_comp, X_train):
+def GaussianMixtureModel(address, run, n_comp, X_train, cov_type):
     print("GMM.GaussianMixtureModel")
     gmm = None
-    gmm = mixture.GaussianMixture(n_components = n_comp, covariance_type = 'diag')
-#    gmm = mixture.BayesianGaussianMixture(n_components = n_comp, covariance_type = 'diag')
+    gmm = mixture.GaussianMixture(n_components = n_comp, covariance_type = cov_type)
+#    gmm = mixture.BayesianGaussianMixture(n_components = n_comp, covariance_type = cov_type)
     gmm.fit(X_train)
     
     #### Attempt to store the GMM object
