@@ -30,20 +30,20 @@ def main(address, filename_raw_data, run, subsample_uniform, subsample_random,\
          fraction_nan_samples, fraction_nan_depths, run_Bic=False):
     print("Starting Load.main")
     """ Main function for module"""
-    lon, lat, Tint, Sint, varTime = load(filename_raw_data)
+    lon, lat, dynHeight, Tint, Sint, varTime = load(filename_raw_data)
     Tint, Sint, depth = removeDepthFractionNan(Tint, Sint, fraction_nan_depths)
-    lon, lat, Tint, Sint, varTime = removeSampleFractionNan(lon, lat, Tint, Sint, varTime, fraction_nan_samples)
+    lon, lat, dynHeight, Tint, Sint, varTime = removeSampleFractionNan(lon, lat, dynHeight, Tint, Sint, varTime, fraction_nan_samples)
     Tint, Sint = dealwithNan(Tint, Sint)
     
     ## At this point the data has been successfully cleaned.
     """ Now I need to subselect the training data """
     Tint_train, Sint_train, varTime_train = None, None, None
     if subsample_uniform: # Currently the only option working 
-        lon_train, lat_train, Tint_train, Sint_train, varTime_train = uniformTrain(lon, lat, Tint, Sint, varTime, depth, grid, conc)
+        lon_train, lat_train, dynHeight_train, Tint_train, Sint_train, varTime_train = uniformTrain(lon, lat, dynHeight, Tint, Sint, varTime, depth, grid, conc)
     if subsample_random: # Now also written and working
-        lon_train, lat_train, Tint_train, Sint_train, varTime_train = randomTrain(lon, lat, Tint, Sint, varTime, depth, fraction_train)
+        lon_train, lat_train, dynHeight_train, Tint_train, Sint_train, varTime_train = randomTrain(lon, lat, dynHeight, Tint, Sint, varTime, depth, fraction_train)
     if subsample_inTime:
-        lon_train, lat_train, Tint_train, Sint_train, varTime_train = inTimeTrain(lon, lat, Tint, Sint, varTime, depth, inTime_start, inTime_finish)
+        lon_train, lat_train, dynHeight_train, Tint_train, Sint_train, varTime_train = inTimeTrain(lon, lat, dynHeight, Tint, Sint, varTime, depth, inTime_start, inTime_finish)
     
     ## At this point we should have a training data set to go with the full data set
     """ Now we can centre and standardise the training data, and the whole data will follow """
@@ -57,6 +57,7 @@ def main(address, filename_raw_data, run, subsample_uniform, subsample_random,\
     """
     lon_test = [x for x in lon if x not in set(lon_train)]
     lat_test = [x for x in lat if x not in set(lat_train)]
+    dynHeight_test = [x for x in dynHeight if x not in set(dynHeight_train)]
     Tint_test = [x for x in Tint if x not in set(Tint_train)]
     Sint_test = [x for x in Sint if x not in set(Sint_train)]
     varTime_test = [x for x in varTime if x not in set(varTime_train)]
@@ -72,31 +73,33 @@ def main(address, filename_raw_data, run, subsample_uniform, subsample_random,\
 #    print("Starting Print")
     print("varTrain_centre.shape = ", varTrain_centre.shape)
     if not run_Bic:
-        Print.printLoadToFile(address, run, lon, lat, Tint, var_centre, Sint, varTime, \
+        Print.printLoadToFile(address, run, lon, lat, dynHeight, Tint, var_centre, Sint, varTime, \
                               depth)
-        Print.printLoadToFile_Train(address, run, lon_train, lat_train, Tint_train, \
+        Print.printLoadToFile_Train(address, run, lon_train, lat_train, dynHeight_train, Tint_train, \
                                 varTrain_centre, Sint_train, varTime_train, depth)
-        #Print.printLoadToFile_Test(address, run, lon_test, lat_test, Tint_test, \
+        #Print.printLoadToFile_Test(address, run, lon_test, lat_test, dynHeight_test, Tint_test, \
         #                        varTest_centre, Sint_test, varTime_test, depth)
         Print.printDepth(address, run, depth)
     
     if run_Bic:
-        return lon_train, lat_train, Tint_train, varTrain_centre, Sint_train, varTime_train
+        return lon_train, lat_train, dynHeight_train, Tint_train, varTrain_centre, Sint_train, varTime_train
     
 ###############################################################################
 # Functions which Main uses
 def load(filename_raw_data):
     print("Load.load")
     """ This function loads the raw data from a .mat file """
-    lon, lat, Tint, Sint, varTime = [], [], [], [], []
-    # Import lon, lat, Temperature, Salinity and times explicitly
-    variables = ['lon', 'lat', 'Tint', 'Sint','dectime']
+    lon, lat, dynHeight, Tint, Sint, varTime = [], [], [], [], [], []
+    # Import lon, lat, Temperature, Salinity, times, and dynamic height explicitly
+    variables = ['lon', 'lat', 'dynht300_1500', 'Tint', 'Sint', 'dectime']
     mat = h5py.File(filename_raw_data, variable_names = variables)
     
     lon = mat["lon"]
     lon = np.array(lon)[:,0]
     lat = mat["lat"]
     lat = np.array(lat)[:,0]
+    dynHeight = mat["dynht300_1500"]
+    dynHeight = np.array(dynHeight)[:,0]
     Tint = mat["Tint"]
     Tint = np.array(Tint)
     Sint = mat["Sint"]
@@ -104,11 +107,12 @@ def load(filename_raw_data):
     varTime = mat["dectime"]
     varTime = np.array(varTime)
     
+    
     print("Shape of variable = ", Tint.shape)
 #    print("axis 0 = ", np.ma.size(Tint, axis=0)) # axis 0 should be ~290520
 #    print("axis 1 = ", np.ma.size(Tint, axis=1)) # axis 1 should be ~400
     
-    return lon, lat, Tint, Sint, varTime
+    return lon, lat, dynHeight, Tint, Sint, varTime
 
 def removeDepthFractionNan(VAR, VAR2, fraction_of):
     print("Load.removeDepthFractionNan")
@@ -135,7 +139,7 @@ def removeDepthFractionNan(VAR, VAR2, fraction_of):
     #print("VAR shape after half Sample removed = ", VAR.shape)
     return VAR, VAR2, depth_remain  
 
-def removeSampleFractionNan(LON, LAT, VAR, VAR2, varTime, fraction_of):
+def removeSampleFractionNan(LON, LAT, dynHeight, VAR, VAR2, varTime, fraction_of):
     print("Load.removeSampleFractionNan")
     """ This function removes all profiles will a given number of Nan values """
     delete_sample = []
@@ -154,12 +158,13 @@ def removeSampleFractionNan(LON, LAT, VAR, VAR2, varTime, fraction_of):
     VAR2 = np.delete(VAR2, (delete_sample), axis=0 )
     varTime = np.delete(varTime, (delete_sample))
     LON = np.delete(LON, (delete_sample))
-    LAT = np.delete(LAT, (delete_sample))   
+    LAT = np.delete(LAT, (delete_sample)) 
+    dynHeight = np.delete(dynHeight, (delete_sample))
     print("Number of samples deleted above the 1/"+str(fraction_of)+" criterion = ", sample_count)
     #print("VAR shape after half Col removed = ", VAR.shape)
     #print("LON shape = ", LON.shape)
     #print("LAT shape = ", LAT.shape)
-    return LON, LAT, VAR, VAR2, varTime
+    return LON, LAT, dynHeight, VAR, VAR2, varTime
 
 def dealwithNan(VAR, VAR2):
     print("Load.dealwithNan")
@@ -186,11 +191,11 @@ def dealwithNan(VAR, VAR2):
 
 ###############################################################################
 
-def uniformTrain(lon, lat, VAR, VAR2, varTime, depth, grid, concentration):
+def uniformTrain(lon, lat, dynHeight, VAR, VAR2, varTime, depth, grid, concentration):
     print("Load.uniformTrain")
     i_array = np.arange(-180, 180, grid ,dtype=np.int32)    # array of intergers from -180 to 180
                              # Change to 180
-    array_lon, array_lat, array_time = [], [], []
+    array_lon, array_lat, array_dynHeight, array_time = [], [], [], []
     count = 0
     # Loop over the Longitudinal values
     for i in i_array:
@@ -199,6 +204,7 @@ def uniformTrain(lon, lat, VAR, VAR2, varTime, depth, grid, concentration):
         
         lon_temp_i = lon[indices_lon] # lon values that match the criteria
         lat_temp_i = lat[indices_lon] # lat values corresponding to lon values that match the criteria
+        dynHeight_temp_i = dynHeight[indices_lon] # dynamic height values corresponding to lon values that match criteria
         time_temp_i = varTime[indices_lon] # time values corresponding to lon values that match the criteria
         
         if indices_lon.size == 0:
@@ -215,6 +221,7 @@ def uniformTrain(lon, lat, VAR, VAR2, varTime, depth, grid, concentration):
             
             lon_temp_j = lon_temp_i[indices_lat] # lon values that match both lon and lat criteria
             lat_temp_j = lat_temp_i[indices_lat] # lat values that match both lon and lat criteria
+            dynHeight_temp_j = dynHeight_temp_i[indices_lat] # dynamic height values that match both lon and lat criteria
             time_temp_j = time_temp_i[indices_lat] # time values that match both lon and lat criteria
             #print("Indices: ", indices_lat.size , indices_lat)
             
@@ -227,6 +234,7 @@ def uniformTrain(lon, lat, VAR, VAR2, varTime, depth, grid, concentration):
                 lon_temp_j = np.asarray([lon_temp_j])
                 lat_temp_j = np.asarray([lat_temp_j])
                 time_temp_j = np.asarray([time_temp_j])
+                dynHeight_temp_j = np.asarray([dynHeight_temp_j])
                 
             select = None   # Reset the select variable for every iteration
             select = np.random.randint(indices_lat.size, size = concentration)
@@ -235,6 +243,7 @@ def uniformTrain(lon, lat, VAR, VAR2, varTime, depth, grid, concentration):
             # Select the training sample
             lon_select = lon_temp_j[select] # single lon value for selected sample
             lat_select = lat_temp_j[select] # single lat value for selected sample
+            dynHeight_select = dynHeight_temp_j[select] # single dynamic height value for selected sample
             time_select = time_temp_j[select] # single time value for selected sample
             
             for col_depth in range(0,len(depth)):
@@ -262,6 +271,7 @@ def uniformTrain(lon, lat, VAR, VAR2, varTime, depth, grid, concentration):
 
             array_lon = np.append(array_lon,lon_select)
             array_lat = np.append(array_lat,lat_select)
+            array_dynHeight = np.append(array_dynHeight, dynHeight_select)
             array_time = np.append(array_time, time_select)
             
             if i == i_array[0] and j == j_array[0]:
@@ -277,16 +287,18 @@ def uniformTrain(lon, lat, VAR, VAR2, varTime, depth, grid, concentration):
     array_lon = np.squeeze(array_lon.reshape(1,array_lon.size))
     array_lat = np.asarray(array_lat)
     array_lat = np.squeeze(array_lat.reshape(1,array_lat.size))
+    array_dynHeight = np.asarray(array_dynHeight)
+    array_dynHeight = np.squeeze(array_dynHeight.reshape(1,array_dynHeight.size))
     array_time = np.asarray(array_time)
     array_time = np.squeeze(array_time.reshape(1,array_time.size))    
 
     print("var_train_array.shape = ", var_train_array.shape)
     
-    return array_lon, array_lat, var_train_array, var2_train_array, array_time
+    return array_lon, array_lat, array_dynHeight, var_train_array, var2_train_array, array_time
 
 ###############################################################################
-def randomTrain(lon, lat, Tint, Sint, varTime, depth, fraction_train):
-    lon_rand, lat_rand, Tint_rand, Sint_rand, varTime_rand = None, None, None, None, None, None
+def randomTrain(lon, lat, dynHeight, Tint, Sint, varTime, depth, fraction_train):
+    lon_rand, lat_rand, dynHeight_rand, Tint_rand, Sint_rand, varTime_rand = None, None, None, None, None, None, None
     array_size = np.ma.size(Tint, axis = 0)   # Expecting around 280,000
     number_rand = fraction_train * array_size
     
@@ -295,29 +307,31 @@ def randomTrain(lon, lat, Tint, Sint, varTime, depth, fraction_train):
     
     lon_rand = lon[indices_rand]
     lat_rand = lat[indices_rand]
+    dynHeight_rand = dynHeight[indices_rand]
     Tint_rand = Tint[indices_rand, :]
     Sint_rand = Sint[indices_rand, :]
     varTime_rand = varTime[indices_rand]
     
     print("Tint_rand.shape = ", Tint_rand.shape)
     
-    return lon_rand, lat_rand, Tint_rand, Sint_rand, varTime_rand
+    return lon_rand, lat_rand, dynHeight_rand, Tint_rand, Sint_rand, varTime_rand
 ###############################################################################
-def inTimeTrain(lon, lat, Tint, Sint, varTime, depth, inTime_start, inTime_finish):
-    lon_train, lat_train, Tint_train, Sint_train, varTime_train = None, None, None, None, None
+def inTimeTrain(lon, lat, dynHeight, Tint, Sint, varTime, depth, inTime_start, inTime_finish):
+    lon_train, lat_train, dynHeight_train, Tint_train, Sint_train, varTime_train = None, None, None, None, None, None
     
     indices_time = None
     indices_time = np.logical_and(varTime > inTime_start, varTime < inTime_finish)
     
     lon_train = lon[indices_time]
     lat_train = lat[indices_time]
+    dynHeight_train = dynHeight[indices_time]
     Tint_train = Tint[indices_time, :]
     Sint_train = Sint[indices_time, :]
     varTime_train = varTime[indices_time]
     
     print("Tint_train.shape = ", Tint_train.shape)
     
-    return lon_train, lat_train, Tint_train, Sint_train, varTime_train
+    return lon_train, lat_train, dynHeight_train, Tint_train, Sint_train, varTime_train
 ###############################################################################
 def centreAndStandardise(address, run, VAR):
     print("Load.centreAndStandardise")

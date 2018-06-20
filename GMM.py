@@ -30,8 +30,8 @@ def create(address, run, n_comp):
     col_reduced_array = np.arange(col_reduced)
     
     # Load Training data in reduced pca space
-    lon_train, lat_train, X_train_array, varTime_train = None, None, None, None
-    lon_train, lat_train, X_train_array, varTime_train = Print.readPCAFromFile_Train(address, run, col_reduced)
+    lon_train, lat_train, dynHeight_train, X_train_array, varTime_train = None, None, None, None, None
+    lon_train, lat_train, dynHeight_train, X_train_array, varTime_train = Print.readPCAFromFile_Train(address, run, col_reduced)
     
     # Calculate GMM Object
     gmm, gmm_weights, gmm_means, gmm_covariances = None, None, None, None
@@ -50,8 +50,8 @@ def apply(address, run, n_comp):
     col_reduced = Print.readColreduced(address, run)
     
     # Load full data array - X
-    lon, lat, X_array, varTime = None, None, None, None
-    lon, lat, X_array, varTime = Print.readPCAFromFile(address, run, col_reduced)
+    lon, lat, dynHeight, X_array, varTime = None, None, None, None, None
+    lon, lat, dynHeight, X_array, varTime = Print.readPCAFromFile(address, run, col_reduced)
     
     # Load GMM object
     gmm = None
@@ -65,8 +65,8 @@ def apply(address, run, n_comp):
     class_number_array = np.arange(0,n_comp).reshape(-1,1)
     
     # Print Labels and probabilities to file
-    Print.printLabels(address, run, lon, lat, varTime, labels)
-    Print.printPosteriorProb(address, run, lon, lat, varTime, post_prob, class_number_array)
+    Print.printLabels(address, run, lon, lat, dynHeight, varTime, labels)
+    Print.printPosteriorProb(address, run, lon, lat, dynHeight, varTime, post_prob, class_number_array)
     
     
 def GaussianMixtureModel(address, run, n_comp, X_train):

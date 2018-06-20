@@ -94,8 +94,8 @@ def train_reconstruct(address, run):
     depth = Print.readDepth(address, run)
     
     # Load the training varaible
-    lon_train, lat_train, X_train_array, varTime_train = None, None, None, None
-    lon_train, lat_train, X_train_array, varTime_train = Print.readPCAFromFile_Train(address, run, col_reduced)
+    lon_train, lat_train, dynHeight_train, X_train_array, varTime_train = None, None, None, None, None
+    lon_train, lat_train, dynHeight_train, X_train_array, varTime_train = Print.readPCAFromFile_Train(address, run, col_reduced)
     
     # Reconstruct
     XRC_train = None     # R = reconstructed, C = centred
@@ -106,7 +106,7 @@ def train_reconstruct(address, run):
     XR_train = stand.inverse_transform(XRC_train)
     
     # Print the results to a file
-    Print.printReconstruction(address, run, lon_train, lat_train, XR_train, XRC_train, varTime_train, depth, True)
+    Print.printReconstruction(address, run, lon_train, lat_train, dynHeight_train, XR_train, XRC_train, varTime_train, depth, True)
     
 def full_reconstruct(address, run):
     print("Reconstruct.full_reconstruct")
@@ -130,8 +130,8 @@ def full_reconstruct(address, run):
     depth = Print.readDepth(address, run)
     
     # Load the training varaible
-    lon, lat, X_array, varTime = None, None, None, None
-    lon, lat, X_array, varTime = Print.readPCAFromFile(address, run, col_reduced)
+    lon, lat, dynHeight, X_array, varTime = None, None, None, None, None
+    lon, lat, dynHeight, X_array, varTime = Print.readPCAFromFile(address, run, col_reduced)
     
     # Reconstruct
     XRC = None     # R = reconstructed, C = centred
@@ -142,7 +142,7 @@ def full_reconstruct(address, run):
     XR = stand.inverse_transform(XRC)
     
     # Print the results to a file
-    Print.printReconstruction(address, run, lon, lat, XR, XRC, varTime, depth, False)
+    Print.printReconstruction(address, run, lon, lat, dynHeight, XR, XRC, varTime, depth, False)
     
     
 

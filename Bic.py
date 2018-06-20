@@ -73,9 +73,9 @@ def bic_oneRun(address, filename_raw_data, subsample_bic, repeat_bic, max_groups
          conc_bic, size_bic, n_dimen, fraction_nan_samples, fraction_nan_depths):
 
     # Load the training data
-    lon_train, lat_train, Tint_train, varTrain_centre, Sint_train, varTime_train \
-            = None, None, None, None, None, None
-    lon_train, lat_train, Tint_train, varTrain_centre, Sint_train, varTime_train \
+    lon_train, lat_train, dynHeight_train, Tint_train, varTrain_centre, Sint_train, varTime_train \
+            = None, None, None, None, None, None, None
+    lon_train, lat_train, dynHeight_train, Tint_train, varTrain_centre, Sint_train, varTime_train \
         = Load.main(address, filename_raw_data, None, subsample_bic, False,\
          False, grid_bic, conc_bic, None, None, None,\
          fraction_nan_samples, fraction_nan_depths, run_Bic=True)

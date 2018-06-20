@@ -32,9 +32,9 @@ def create(address, run, n_dimen):
     depth = Print.readDepth(address, run)
     
     # Load Training data
-    lon_train, lat_train, Tint_train_array, X_train_array, \
-            Sint_train_array, varTime_train = None, None, None, None, None, None
-    lon_train, lat_train, Tint_train_array, X_train_array, \
+    lon_train, lat_train, dynHeight_train, Tint_train_array, X_train_array, \
+            Sint_train_array, varTime_train = None, None, None, None, None, None, None
+    lon_train, lat_train, dynHeight_train, Tint_train_array, X_train_array, \
             Sint_train_array, varTime_train = Print.readLoadFromFile_Train(address, run, depth)
     
     # Start the PCA process
@@ -45,7 +45,7 @@ def create(address, run, n_dimen):
     """ Now we can print the reduced training dataset to a file """
 #    print("Starting Print PCA")
 # NOTE: I'm excluding Tint and Sint at this point in the code
-    Print.printPCAToFile_Train(address, run, lon_train, lat_train, \
+    Print.printPCAToFile_Train(address, run, lon_train, lat_train, dynHeight_train, \
                                 X_pca_train, varTime_train, col_reduced)
     Print.printColreduced(address, run, col_reduced)
     
@@ -60,9 +60,9 @@ def apply(address, run):
     col_reduced = Print.readColreduced(address, run)
     
     # Load full data array - X
-    lon, lat, Tint_array, X_array, \
-            Sint_array, varTime = None, None, None, None, None, None
-    lon, lat, Tint_array, X_array, Sint_array, varTime  = \
+    lon, lat, dynHeight, Tint_array, X_array, \
+            Sint_array, varTime = None, None, None, None, None, None, None
+    lon, lat, dynHeight, Tint_array, X_array, Sint_array, varTime  = \
             Print.readLoadFromFile(address, run, depth)
             
     # Load PCA object
@@ -75,7 +75,7 @@ def apply(address, run):
     X_pca = pca.transform(X_array)    
     
     # Print X_pca to file
-    Print.printPCAToFile(address, run, lon, lat, X_pca, varTime, col_reduced)  
+    Print.printPCAToFile(address, run, lon, lat, dynHeight, X_pca, varTime, col_reduced)  
     del pca
     
 ###############################################################################    

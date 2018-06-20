@@ -137,7 +137,7 @@ def readBIC(address, repeat_bic):
 
 ###############################################################################
 # Load Printing
-def printLoadToFile(address, run, lon, lat, Tint, var_centre, Sint, varTime, \
+def printLoadToFile(address, run, lon, lat, dynHeight, Tint, var_centre, Sint, varTime, \
                           depth ):
     print("Print.printLoadToFile")
     i = 0 
@@ -145,9 +145,9 @@ def printLoadToFile(address, run, lon, lat, Tint, var_centre, Sint, varTime, \
         filename = address+"Data_store/CentredAndUncentred/CentredAndUncentred_depth"+str(int(d))+".csv"
 
         file = open(filename,'w')
-        columns= np.column_stack((lon, lat, Tint[:,i], var_centre[:,i], Sint[:,i], varTime))
+        columns= np.column_stack((lon, lat, dynHeight, Tint[:,i], var_centre[:,i], Sint[:,i], varTime))
         data = columns
-        writer = csv.DictWriter(file, fieldnames = ['lon','lat','Tint_'+str(int(d)),'Tint_centred','Sint','Time'], delimiter = separator)
+        writer = csv.DictWriter(file, fieldnames = ['lon','lat','dynHeight','Tint_'+str(int(d)),'Tint_centred','Sint','Time'], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file, delimiter=separator)
         for line in data:
@@ -157,7 +157,7 @@ def printLoadToFile(address, run, lon, lat, Tint, var_centre, Sint, varTime, \
         
         i = i + 1
         
-def printLoadToFile_Train(address, run, lon_train, lat_train, Tint_train, \
+def printLoadToFile_Train(address, run, lon_train, lat_train, dynHeight_train, Tint_train, \
                           varTrain_centre, Sint_train, varTime_train,\
                           depth ):
     print("Print.printLoadToFile_Train")
@@ -166,9 +166,9 @@ def printLoadToFile_Train(address, run, lon_train, lat_train, Tint_train, \
         filename_train = address+"Data_store/CentredAndUncentred_Train/CentredAndUncentred_Train_depth"+str(int(d))+".csv"        
 
         file_train = open(filename_train,'w')
-        columns_train = np.column_stack((lon_train, lat_train, Tint_train[:,i], varTrain_centre[:,i], Sint_train[:,i], varTime_train))
+        columns_train = np.column_stack((lon_train, lat_train, dynHeight_train, Tint_train[:,i], varTrain_centre[:,i], Sint_train[:,i], varTime_train))
         data_train = columns_train
-        writer = csv.DictWriter(file_train, fieldnames = ['lon_train','lat_train','VAR_train_'+str(int(d)),'Var_train_centred','Sint_train','Time_train'], delimiter = separator)
+        writer = csv.DictWriter(file_train, fieldnames = ['lon_train','lat_train','dynHeight_train','VAR_train_'+str(int(d)),'Var_train_centred','Sint_train','Time_train'], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file_train, delimiter=separator)    
         for line in data_train:
@@ -178,7 +178,7 @@ def printLoadToFile_Train(address, run, lon_train, lat_train, Tint_train, \
         
         i = i + 1
         
-def printLoadToFile_Test(address, run, lon_test, lat_test, Tint_test, \
+def printLoadToFile_Test(address, run, lon_test, lat_test, dynHeight_test, Tint_test, \
                                 varTest_centre, Sint_test, varTime_test, depth):
     print("Print.printLoadToFile_Test")
     i = 0 
@@ -186,9 +186,9 @@ def printLoadToFile_Test(address, run, lon_test, lat_test, Tint_test, \
         filename_test = address+"Data_store/CentredAndUncentred_Test/CentredAndUncentred_Test_depth"+str(int(d))+".csv"        
 
         file_test = open(filename_test,'w')
-        columns_test = np.column_stack((lon_test, lat_test, Tint_test[:,i], varTest_centre[:,i], Sint_test[:,i], varTime_test))
+        columns_test = np.column_stack((lon_test, lat_test, dynHeight_test, Tint_test[:,i], varTest_centre[:,i], Sint_test[:,i], varTime_test))
         data_test = columns_test
-        writer = csv.DictWriter(file_test, fieldnames = ['lon_test','lat_test','VAR_test_'+str(int(d)),'Var_test_centred','Sint_test','Time_test'], delimiter = separator)
+        writer = csv.DictWriter(file_test, fieldnames = ['lon_test','lat_test','dynHeight_test','VAR_test_'+str(int(d)),'Var_test_centred','Sint_test','Time_test'], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file_test, delimiter=separator)    
         for line in data_test:
@@ -200,7 +200,7 @@ def printLoadToFile_Test(address, run, lon_test, lat_test, Tint_test, \
     
 def readLoadFromFile(address, run, depth):
     print("Print.readLoadFromFile")
-    lon, lat, Tint, var, Sint, varTime = None, None, None, None, None, None
+    lon, lat, dynHeight, Tint, var, Sint, varTime = None, None, None, None, None, None, None
     head_number = 1
     i = 0
     for d in depth:
@@ -211,11 +211,12 @@ def readLoadFromFile(address, run, depth):
         if i == 0:
             lon     = csvfile[:,0]
             lat     = csvfile[:,1]
-            varTime = csvfile[:,5]
+            dynHeight = csvfile[:,2]
+            varTime = csvfile[:,6]
 
-        Tint    = csvfile[:,2]
-        var     = csvfile[:,3]
-        Sint    = csvfile[:,4]
+        Tint    = csvfile[:,3]
+        var     = csvfile[:,4]
+        Sint    = csvfile[:,5]
 
         if i == 0:
             Tint_array      = Tint.reshape(Tint.size,1)
@@ -231,11 +232,11 @@ def readLoadFromFile(address, run, depth):
             X_array = np.hstack([X_array, X])
         i = i + 1   
 
-    return lon, lat, Tint_array, X_array, Sint_array, varTime
+    return lon, lat, dynHeight, Tint_array, X_array, Sint_array, varTime
 
 def readLoadFromFile_Train(address, run, depth):
     print("Print.readLoadFromFile_Train")
-    lon_train, lat_train, Tint_train, varTrain, Sint_train, varTime_train = None, None, None, None, None, None
+    lon_train, lat_train, dynHeight_train, Tint_train, varTrain, Sint_train, varTime_train = None, None, None, None, None, None, None
     head_number = 1
     i = 0
     for d in depth:
@@ -246,11 +247,12 @@ def readLoadFromFile_Train(address, run, depth):
         if i == 0:
             lon_train     = csvfile_train[:,0]
             lat_train     = csvfile_train[:,1]
-            varTime_train = csvfile_train[:,5]
+            dynHeight_train = csvfile_train[:,2]
+            varTime_train = csvfile_train[:,6]
 
-        Tint_train    = csvfile_train[:,2]
-        varTrain     = csvfile_train[:,3]
-        Sint_train    = csvfile_train[:,4]
+        Tint_train    = csvfile_train[:,3]
+        varTrain     = csvfile_train[:,4]
+        Sint_train    = csvfile_train[:,5]
     
         if i == 0:
             Tint_train_array = Tint_train.reshape(Tint_train.size,1)
@@ -267,12 +269,12 @@ def readLoadFromFile_Train(address, run, depth):
         
         i = i + 1
 
-    return lon_train,lat_train, Tint_train_array, X_train_array, \
+    return lon_train, lat_train, dynHeight_train, Tint_train_array, X_train_array, \
             Sint_train_array, varTime_train
             
 def readLoadFromFile_Test(address, run, depth):
     print("Print.readLoadFromFile_Test")
-    lon_test, lat_test, Tint_test, varTest, Sint_test, varTime_test = None, None, None, None, None, None
+    lon_test, lat_test, dynHeight_test, Tint_test, varTest, Sint_test, varTime_test = None, None, None, None, None, None
     head_number = 1
     i = 0
     for d in depth:
@@ -283,11 +285,12 @@ def readLoadFromFile_Test(address, run, depth):
         if i == 0:
             lon_test     = csvfile_test[:,0]
             lat_test     = csvfile_test[:,1]
-            varTime_test = csvfile_test[:,5]
+            dynHeight_test = csvfile_test[:,2]
+            varTime_test = csvfile_test[:,6]
 
-        Tint_test    = csvfile_test[:,2]
-        varTest     = csvfile_test[:,3]
-        Sint_test    = csvfile_test[:,4]
+        Tint_test    = csvfile_test[:,3]
+        varTest     = csvfile_test[:,4]
+        Sint_test    = csvfile_test[:,5]
     
         if i == 0:
             Tint_test_array = Tint_test.reshape(Tint_test.size,1)
@@ -304,20 +307,20 @@ def readLoadFromFile_Test(address, run, depth):
         
         i = i + 1
 
-    return lon_test, lat_test, Tint_test_array, X_test_array, \
+    return lon_test, lat_test, dynHeight_test, Tint_test_array, X_test_array, \
             Sint_test_array, varTime_test
 
 ###############################################################################
 # PCA Printing
-def printPCAToFile(address, run, lon, lat, X_pca, varTime, col_reduced):
+def printPCAToFile(address, run, lon, lat, dynHeight, X_pca, varTime, col_reduced):
     print("Print.printPCAToFile")
     for d in range(col_reduced):
         filename = address+"Data_store/PCA/PCA_reddepth"+str(d)+".csv"        
 
         file = open(filename, 'w')
-        columns = np.column_stack((lon, lat, X_pca[:,d], varTime))
+        columns = np.column_stack((lon, lat, dynHeight, X_pca[:,d], varTime))
         data = columns
-        writer = csv.DictWriter(file, fieldnames = ['lon','lat','VAR_'+str(int(d)),'Time'], delimiter = separator)
+        writer = csv.DictWriter(file, fieldnames = ['lon','lat','dynHeight','VAR_'+str(int(d)),'Time'], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file, delimiter=separator)    
         for line in data:
@@ -325,16 +328,16 @@ def printPCAToFile(address, run, lon, lat, X_pca, varTime, col_reduced):
         file.close() 
         del filename, file
 
-def printPCAToFile_Train(address, run, lon_train, lat_train, \
+def printPCAToFile_Train(address, run, lon_train, lat_train, dynHeight_train, \
                                 X_pca_train, varTime_train, col_reduced):
     print("Print.printPCAToFile_Train")
     for d in range(col_reduced):
         filename_train = address+"Data_store/PCA_Train/PCA_Train_reddepth"+str(d)+".csv"        
 
         file_train = open(filename_train,'w')
-        columns_train = np.column_stack((lon_train, lat_train, X_pca_train[:,d], varTime_train))
+        columns_train = np.column_stack((lon_train, lat_train, dynHeight_train, X_pca_train[:,d], varTime_train))
         data_train = columns_train
-        writer = csv.DictWriter(file_train, fieldnames = ['lon_train','lat_train','VAR_train_'+str(int(d)),'Time_train'], delimiter = separator)
+        writer = csv.DictWriter(file_train, fieldnames = ['lon_train','lat_train','dynHeight_train','VAR_train_'+str(int(d)),'Time_train'], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file_train, delimiter=separator)    
         for line in data_train:
@@ -344,7 +347,7 @@ def printPCAToFile_Train(address, run, lon_train, lat_train, \
 
 def readPCAFromFile(address, run, col_reduced):
     print("Print.readPCAFromFile")
-    lon, lat, var, varTime= None, None, None, None
+    lon, lat, dynHeight, var, varTime= None, None, None, None, None
     head_number = 1
     for d in range(col_reduced):
         filename = address+"Data_store/PCA/PCA_reddepth"+str(int(d))+".csv"
@@ -354,9 +357,10 @@ def readPCAFromFile(address, run, col_reduced):
         if d == 0:
             lon     = csvfile[:,0]
             lat     = csvfile[:,1]
-            varTime = csvfile[:,3]
+            dynHeight = csvfile[:,2]
+            varTime = csvfile[:,4]
 
-        var     = csvfile[:,2]
+        var     = csvfile[:,3]
     
         if d == 0:
             X_array   = var.reshape(var.size,1)
@@ -366,11 +370,11 @@ def readPCAFromFile(address, run, col_reduced):
 #    print("X_array.shape = ", X_array.shape)
 #    print(lon.shape,lat.shape,varTime.shape)
     
-    return lon, lat, X_array, varTime
+    return lon, lat, dynHeight, X_array, varTime
         
 def readPCAFromFile_Train(address, run, col_reduced):
     print("Print.readPCAFromFile_Train")
-    lon_train, lat_train, varTrain, varTime_train = None, None, None, None
+    lon_train, lat_train, dynHeight_train, varTrain, varTime_train = None, None, None, None, None
     head_number = 1
     for d in range(col_reduced):
         filename_train = address+"Data_store/PCA_Train/PCA_Train_reddepth"+str(int(d))+".csv"
@@ -380,9 +384,10 @@ def readPCAFromFile_Train(address, run, col_reduced):
         if d == 0:
             lon_train     = csvfile_train[:,0]
             lat_train     = csvfile_train[:,1]
-            varTime_train = csvfile_train[:,3]
+            dynHeight_train = csvfile_train[:,2]
+            varTime_train = csvfile_train[:,4]
 
-        varTrain     = csvfile_train[:,2]
+        varTrain     = csvfile_train[:,3]
     
         if d == 0:
             X_train_array   = varTrain.reshape(varTrain.size,1)
@@ -392,7 +397,7 @@ def readPCAFromFile_Train(address, run, col_reduced):
 #    print("X_train_array.shape = ", X_train_array.shape)
 #    print(lon_train.shape,lat_train.shape,varTime_train.shape)
     
-    return lon_train, lat_train, X_train_array, varTime_train
+    return lon_train, lat_train, dynHeight_train, X_train_array, varTime_train
 
 ###############################################################################
 def printGMMclasses(address, run, class_number_array, gmm_weights, gmm_means,\
@@ -454,16 +459,16 @@ def readGMMclasses(address, run, depth_array, space):
     return gmm_weights, gmm_means, gmm_covariances
 
 ###############################################################################
-def printLabels(address, run, lon, lat, varTime, labels):
+def printLabels(address, run, lon, lat, dynHeight, varTime, labels):
     print("Print.printLabels")
     filename = address+"Data_store/Labels/Labels.csv"
     if run != None:
         filename = address+"Data_store/Labels/Labels_run"+str(run)+".csv"        
 
     file = open(filename,'w')
-    columns = np.column_stack(( lon, lat, varTime, labels ))
+    columns = np.column_stack(( lon, lat, dynHeight, varTime, labels ))
     data = columns
-    writer = csv.DictWriter(file, fieldnames = ['lon','lat','varTime','label'], delimiter = separator)
+    writer = csv.DictWriter(file, fieldnames = ['lon','lat','dynHeight','varTime','label'], delimiter = separator)
     writer.writeheader()
     writer = csv.writer(file, delimiter=separator)    
     for line in data:
@@ -480,26 +485,27 @@ def readLabels(address,run):
         
     csvfile = np.genfromtxt(filename, delimiter=",",skip_header=head_number)
     
-    lon, lat, varTime, labels = None, None, None, None
+    lon, lat, dynHeight, varTime, labels = None, None, None, None, None
     
     lon = csvfile[:,0]
     lat = csvfile[:,1]
-    varTime = csvfile[:,2]
-    labels = csvfile[:,3]
+    dynHeight = csvfile[:,2]
+    varTime = csvfile[:,3]
+    labels = csvfile[:,4]
     
-    return lon, lat, varTime, labels
+    return lon, lat, dynHeight, varTime, labels
 
 ###############################################################################
     
-def printPosteriorProb(address, run, lon, lat, varTime, post_prob, class_number_array):
+def printPosteriorProb(address, run, lon, lat, dynHeight, varTime, post_prob, class_number_array):
     print("Print.printPosteriorProb")
     i = 0
     for class_number in class_number_array:
         filename = address+"Data_store/Probabilities/Post_prob_class"+str(class_number)+".csv"
         file = open(filename,'w')
-        columns = np.column_stack(( lon, lat, varTime, post_prob[:,i] ))
+        columns = np.column_stack(( lon, lat, dynHeight, varTime, post_prob[:,i] ))
         data = columns
-        writer = csv.DictWriter(file, fieldnames = ['lon','lat','varTime','post_prob_class_'+str(class_number)], delimiter = separator)
+        writer = csv.DictWriter(file, fieldnames = ['lon','lat','dynHeight','varTime','post_prob_class_'+str(class_number)], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file, delimiter=separator)    
         for line in data:
@@ -518,14 +524,15 @@ def readPosteriorProb(address,run,class_number_array):
 
         csvfile = np.genfromtxt(filename, delimiter=",",skip_header=head_number)
         
-        lon, lat, varTime, post_prob_i = None, None, None, None
+        lon, lat, dynHeight, varTime, post_prob_i = None, None, None, None, None
         
         if i == 0:
             lon = csvfile[:,0]
             lat = csvfile[:,1]
-            varTime = csvfile[:,2]
+            dynHeight = csvfile[:,2]
+            varTime = csvfile[:,3]
         
-        post_prob_i = csvfile[:,3]
+        post_prob_i = csvfile[:,4]
 
         if i == 0:
             post_prob  = post_prob_i.reshape(post_prob_i.size,1)
@@ -534,10 +541,10 @@ def readPosteriorProb(address,run,class_number_array):
             post_prob = np.hstack([post_prob, post_prob_i])
         i = i + 1
     
-    return lon, lat, varTime, post_prob
+    return lon, lat, dynHeight, varTime, post_prob
         
 ###############################################################################
-def printReconstruction(address, run, lon, lat, X, XC, varTime, depth, isTrain):
+def printReconstruction(address, run, lon, lat, dynHeight, X, XC, varTime, depth, isTrain):
     print("Print.printReconstruction isTrain = "+str(isTrain))
     # isTrain is True or False
     i = 0
@@ -546,9 +553,9 @@ def printReconstruction(address, run, lon, lat, X, XC, varTime, depth, isTrain):
         if isTrain:
             filename = address+"Data_store/Reconstruction_Train/Recon_Train_depth"+str(int(d))+".csv"
         file = open(filename,'w')
-        columns = np.column_stack(( lon, lat, X[:,i], XC[:,i], varTime ))
+        columns = np.column_stack(( lon, lat, dynHeight, X[:,i], XC[:,i], varTime ))
         data = columns
-        writer = csv.DictWriter(file, fieldnames = ['lon','lat','X_'+str(int(d)), 'X_centred', 'varTime'], delimiter = separator)
+        writer = csv.DictWriter(file, fieldnames = ['lon','lat','dynHeight','X_'+str(int(d)), 'X_centred', 'varTime'], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file, delimiter=separator)    
         for line in data:
@@ -572,10 +579,11 @@ def readReconstruction(address, run, depth, isTrain):
         if i == 0:
             lon     = csvfile[:,0]
             lat     = csvfile[:,1]
-            varTime = csvfile[:,4]
+            dynHeight = csvfile[:,2]
+            varTime = csvfile[:,5]
 
-        var         = csvfile[:,2]
-        var_centred = csvfile[:,3]
+        var         = csvfile[:,3]
+        var_centred = csvfile[:,4]
 
         if i == 0:
             X_array_centred = var_centred.reshape(var_centred.size,1)
@@ -593,9 +601,9 @@ def readReconstruction(address, run, depth, isTrain):
 #    print("Tint_array.shape = ", Tint_array.shape)
 #    print("Sint_array.shape = ", Sint_array.shape)
     
-#    print(lon.shape,lat.shape,varTime.shape)
+#    print(lon.shape,lat.shape,dynHeight.shape,varTime.shape)
     
-    return lon, lat, X_array, X_array_centred, varTime
+    return lon, lat, dynHeight, X_array, X_array_centred, varTime
         
     
 print('Printing runtime = ', time.clock() - start_time,' s')
