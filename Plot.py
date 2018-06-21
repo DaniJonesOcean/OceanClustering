@@ -114,7 +114,7 @@ def plotByDynHeight(address, address_fronts, runIndex, n_comp):
 
     fig, axes = plt.subplots(2, 4, sharex=True, sharey=True)
     # loop through each class, process and cut
-    for numclass in range(0,8):
+    for numclass in range(0,n_comp-1):
         xplotNow = lon[labels==numclass]
         yplotNow = dynHeight[labels==numclass]
         postNow = post_prob[:,numclass][labels==numclass]

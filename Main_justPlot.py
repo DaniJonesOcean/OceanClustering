@@ -34,15 +34,16 @@ import Plot
 start_time = time.clock()
 
 """ Define some initial conditions, locations and parameters """
-n_comp = 8         # Number of classes in GMM object
+n_comp = 6         # Number of classes in GMM object
 n_dimen = 0.999     # Amount of variance retained in PCA
 loop = False        # Do we want to loop the program
 if loop:
     run_total = 25  # Number of times we want to loop
 
-address = "/Users/dcjones3/Documents/OceanClusteringTools/"     # Location of Program
-filename_raw_data = "/Users/dcjones3/Documents/OceanClusteringTools/Data_in/SO_Argo_all.mat"   # Location of raw data
-address_fronts = "/Users/dcjones3/Documents/OceanClusteringTools/Data_in/Fronts/"
+# set locations
+address = "/data/expose/OceanClustering/"     # location of program
+filename_raw_data = "/data/expose/OceanClustering/Data_in/SO_Argo_all.mat"   # location of raw data
+address_fronts = "/data/expose/OceanClustering/Data_in/Fronts/"
 
 # Define some booleans to determine what the program should do
 run_bic = False         # Do we want to calculate the BIC scores ?

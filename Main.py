@@ -34,7 +34,7 @@ import Plot
 start_time = time.clock()
 
 """ Define some initial conditions, locations and parameters """
-n_comp = 6                # number of classes in GMM object
+n_comp = 8                # number of classes in GMM object
 n_dimen = 0.999           # amount of variance retained in PCA
 cov_type = 'full'    # specify covariance type (full, tied, diag, or spherical)
 loop = False              # do we want to loop the program
@@ -109,7 +109,7 @@ def main(runIndex=None):
 
     Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp)
     
-    Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=True)
+    Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=False)
 
     Plot.plotProfileClass(address, runIndex, n_comp, 'uncentred')
     Plot.plotProfileClass(address, runIndex, n_comp, 'depth')
