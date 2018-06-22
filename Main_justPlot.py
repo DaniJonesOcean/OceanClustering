@@ -77,64 +77,64 @@ fraction_nan_depths = 32.0  # If a depth level across all samples has " " " ", i
 ###############################################################################
 
 """ Program """
-def main(run=None):
+def main(runIndex=None):
     print("Starting Main.main_justPlot()")  
     
     # Now start the GMM process
-    #Load.main(address, filename_raw_data, run, subsample_uniform, subsample_random,\
+    #Load.main(address, filename_raw_data, runIndex, subsample_uniform, subsample_random,\
     #           subsample_inTime, grid, conc, fraction_train, inTime_start, inTime_finish, fraction_nan_samples, fraction_nan_depths)
         # Loads data, selects Train, cleans, centres/standardises, prints
     
-    #PCA.create(address, run, n_dimen)     # Uses Train to create PCA, prints results, stores object
-    #GMM.create(address, run, n_comp)      # Uses Train to create GMM, prints results, stores object
+    #PCA.create(address, runIndex, n_dimen)     # Uses Train to create PCA, prints results, stores object
+    #GMM.create(address, runIndex, n_comp)      # Uses Train to create GMM, prints results, stores object
    
-    #PCA.apply(address, run)               # Applies PCA to test dataset     
-    #GMM.apply(address, run, n_comp)       # Applies GMM to test dataset
+    #PCA.apply(address, runIndex)               # Applies PCA to test dataset     
+    #GMM.apply(address, runIndex, n_comp)       # Applies GMM to test dataset
     
     # Reconstruction
-    #Reconstruct.gmm_reconstruct(address, run, n_comp)  # Reconstructs the results in original space
-    #Reconstruct.full_reconstruct(address, run)
-    #Reconstruct.train_reconstruct(address, run)
+    #Reconstruct.gmm_reconstruct(address, runIndex, n_comp)  # Reconstructs the results in original space
+    #Reconstruct.full_reconstruct(address, runIndex)
+    #Reconstruct.train_reconstruct(address, runIndex)
     
     # Plotting
-    #Plot.plotMapCircular(address, address_fronts, run, n_comp)
+    #Plot.plotMapCircular(address, address_fronts, runIndex, n_comp)
     
-    Plot.plotPosterior(address, address_fronts, run, n_comp, plotFronts=True)
+    Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=True)
 
-    #Plot.plotProfileClass(address, run, n_comp, 'uncentred')
-    #Plot.plotProfileClass(address, run, n_comp, 'depth')
+    #Plot.plotProfileClass(address, runIndex, n_comp, 'uncentred')
+    #Plot.plotProfileClass(address, runIndex, n_comp, 'depth')
 
-    #Plot.plotGaussiansIndividual(address, run, n_comp, 'reduced')
-#    Plot.plotGaussiansIndividual(address, run, n_comp, 'depth') # ERROR NOT WOKRING PROPERLY
-#    Plot.plotGaussiansIndividual(address, run, n_comp, 'uncentred') # ERROR NOT WOKRING PROPERLY
+    #Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced')
+#    Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'depth') # ERROR NOT WOKRING PROPERLY
+#    Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'uncentred') # ERROR NOT WOKRING PROPERLY
     
-#    Plot.plotProfile(address, run, 'original')
-#    Plot.plotProfile(address, run, 'uncentred')
+#    Plot.plotProfile(address, runIndex, 'original')
+#    Plot.plotProfile(address, runIndex, 'uncentred')
     
-#    Plot.plotWeights(address, run)
+#    Plot.plotWeights(address, runIndex)
     
 """ Opt to run different sections or variations of the program """
 
 def loopMain(run_total):
-    for run in range(1,run_total+1):    # Ensures loop starts from run = 1
-        print("RUN NUMBER ", str(run))
-        main(run)
+    for runIndex in range(1,run_total+1):    # Ensures loop starts from run = 1
+        print("RUN NUMBER ", str(runIndex))
+        main(runIndex)
         
         lon, lat, varTime, labels_run = None, None, None, None
-        lon, lat, varTime, labels_run = Print.readLabels(address, run)
-        if run == 1:
+        lon, lat, varTime, labels_run = Print.readLabels(address, runIndex)
+        if runIndex == 1:
             labels_loop   = labels_run.reshape(labels_run.size,1)
         else:
             labels_run = labels_run.reshape(labels_run.size,1)
             labels_loop = np.hstack([labels_loop, labels_run])
-        print("RUN NUMBER ", str(run)," finish time = ", time.clock() - start_time)
+        print("RUN NUMBER ", str(runIndex)," finish time = ", time.clock() - start_time)
         # Labels shape should be (# profiles, # runs)
     axis = 1
     labels_mostFreq, indices = np.unique(labels_loop, return_inverse=True)
     labels_mostFreq = labels_mostFreq[np.argmax(np.apply_along_axis(np.bincount, axis, indices.reshape(labels_loop.shape),
                                 None, np.max(indices) + 1), axis=axis)]    
     Print.printLabels(address, 'Total', lon, lat, varTime, labels_mostFreq)
-    del run
+    del runIndex
 #    Plot.loop(address, run_total)   # Plot the results fo the looped program
     
 

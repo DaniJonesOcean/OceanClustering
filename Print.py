@@ -21,7 +21,7 @@ separator = ','
 
 ###############################################################################
 # Depth Printing
-def printDepth(address, nrun, depth):
+def printDepth(address, runIndex, depth):
     print("Print.printDepth")
     filename = address+"Data_store/Info/Depth_retained.csv"
     file = open(filename,'w')
@@ -33,7 +33,7 @@ def printDepth(address, nrun, depth):
         writer.writerow(line)
     file.close() 
     
-def readDepth(address, nrun):
+def readDepth(address, runIndex):
     print("Print.readDepth")
     filename = address+"Data_store/Info/Depth_retained.csv"
     depth = None
@@ -43,7 +43,7 @@ def readDepth(address, nrun):
     return depth
 
 # Col_reduced Printing
-def printColreduced(address, nrun, col_reduced):
+def printColreduced(address, runIndex, col_reduced):
     print("Print.printColreduced")
     filename = address+"Data_store/Info/Col_reduced.csv"
     file = open(filename,'w')
@@ -54,7 +54,7 @@ def printColreduced(address, nrun, col_reduced):
     writer.writerow(data)
     file.close()
     
-def readColreduced(address, nrun):
+def readColreduced(address, runIndex):
     print("Print.readColreduced")
     filename = address+"Data_store/Info/Col_reduced.csv"
     col_reduced = None
@@ -137,7 +137,7 @@ def readBIC(address, repeat_bic):
 
 ###############################################################################
 # Load Printing
-def printLoadToFile(address, nrun, lon, lat, dynHeight, Tint, var_centre, Sint, varTime, \
+def printLoadToFile(address, runIndex, lon, lat, dynHeight, Tint, var_centre, Sint, varTime, \
                           depth ):
     print("Print.printLoadToFile")
     i = 0 
@@ -157,7 +157,7 @@ def printLoadToFile(address, nrun, lon, lat, dynHeight, Tint, var_centre, Sint, 
         
         i = i + 1
         
-def printLoadToFile_Train(address, nrun, lon_train, lat_train, dynHeight_train, Tint_train, \
+def printLoadToFile_Train(address, runIndex, lon_train, lat_train, dynHeight_train, Tint_train, \
                           varTrain_centre, Sint_train, varTime_train,\
                           depth ):
     print("Print.printLoadToFile_Train")
@@ -178,7 +178,7 @@ def printLoadToFile_Train(address, nrun, lon_train, lat_train, dynHeight_train, 
         
         i = i + 1
         
-def printLoadToFile_Test(address, nrun, lon_test, lat_test, dynHeight_test, Tint_test, \
+def printLoadToFile_Test(address, runIndex, lon_test, lat_test, dynHeight_test, Tint_test, \
                                 varTest_centre, Sint_test, varTime_test, depth):
     print("Print.printLoadToFile_Test")
     i = 0 
@@ -198,7 +198,7 @@ def printLoadToFile_Test(address, nrun, lon_test, lat_test, dynHeight_test, Tint
         
         i = i + 1
     
-def readLoadFromFile(address, nrun, depth):
+def readLoadFromFile(address, runIndex, depth):
     print("Print.readLoadFromFile")
     lon, lat, dynHeight, Tint, var, Sint, varTime = None, None, None, None, None, None, None
     head_number = 1
@@ -234,7 +234,7 @@ def readLoadFromFile(address, nrun, depth):
 
     return lon, lat, dynHeight, Tint_array, X_array, Sint_array, varTime
 
-def readLoadFromFile_Train(address, nrun, depth):
+def readLoadFromFile_Train(address, runIndex, depth):
     print("Print.readLoadFromFile_Train")
     lon_train, lat_train, dynHeight_train, Tint_train, varTrain, Sint_train, varTime_train = None, None, None, None, None, None, None
     head_number = 1
@@ -272,7 +272,7 @@ def readLoadFromFile_Train(address, nrun, depth):
     return lon_train, lat_train, dynHeight_train, Tint_train_array, X_train_array, \
             Sint_train_array, varTime_train
             
-def readLoadFromFile_Test(address, nrun, depth):
+def readLoadFromFile_Test(address, runIndex, depth):
     print("Print.readLoadFromFile_Test")
     lon_test, lat_test, dynHeight_test, Tint_test, varTest, Sint_test, varTime_test = None, None, None, None, None, None
     head_number = 1
@@ -312,7 +312,7 @@ def readLoadFromFile_Test(address, nrun, depth):
 
 ###############################################################################
 # PCA Printing
-def printPCAToFile(address, nrun, lon, lat, dynHeight, X_pca, varTime, col_reduced):
+def printPCAToFile(address, runIndex, lon, lat, dynHeight, X_pca, varTime, col_reduced):
     print("Print.printPCAToFile")
     for d in range(col_reduced):
         filename = address+"Data_store/PCA/PCA_reddepth"+str(d)+".csv"        
@@ -328,7 +328,7 @@ def printPCAToFile(address, nrun, lon, lat, dynHeight, X_pca, varTime, col_reduc
         file.close() 
         del filename, file
 
-def printPCAToFile_Train(address, nrun, lon_train, lat_train, dynHeight_train, \
+def printPCAToFile_Train(address, runIndex, lon_train, lat_train, dynHeight_train, \
                                 X_pca_train, varTime_train, col_reduced):
     print("Print.printPCAToFile_Train")
     for d in range(col_reduced):
@@ -345,7 +345,7 @@ def printPCAToFile_Train(address, nrun, lon_train, lat_train, dynHeight_train, \
         file_train.close() 
         del filename_train, file_train
 
-def readPCAFromFile(address, nrun, col_reduced):
+def readPCAFromFile(address, runIndex, col_reduced):
     print("Print.readPCAFromFile")
     lon, lat, dynHeight, var, varTime= None, None, None, None, None
     head_number = 1
@@ -372,7 +372,7 @@ def readPCAFromFile(address, nrun, col_reduced):
     
     return lon, lat, dynHeight, X_array, varTime
         
-def readPCAFromFile_Train(address, nrun, col_reduced):
+def readPCAFromFile_Train(address, runIndex, col_reduced):
     print("Print.readPCAFromFile_Train")
     lon_train, lat_train, dynHeight_train, varTrain, varTime_train = None, None, None, None, None
     head_number = 1
@@ -400,7 +400,7 @@ def readPCAFromFile_Train(address, nrun, col_reduced):
     return lon_train, lat_train, dynHeight_train, X_train_array, varTime_train
 
 ###############################################################################
-def printGMMclasses(address, nrun, class_number_array, gmm_weights, gmm_means,\
+def printGMMclasses(address, runIndex, class_number_array, gmm_weights, gmm_means,\
                     gmm_covariances, depth_array, space):
     print("Print.printGMMclasses "+space)
     # space is either 'depth', 'reduced' or 'uncentred'
@@ -408,8 +408,8 @@ def printGMMclasses(address, nrun, class_number_array, gmm_weights, gmm_means,\
     i = 0
     for d in depth_array:
         filename_train = address+"Data_store/GMM_classes_"+space+"/GMM_classes_"+space+str(int(d))+".csv"        
-        if nrun != None:
-            filename_train = address+"Data_store/GMM_classes_"+space+"/GMM_classes_"+space+str(int(d))+"_run"+str(int(nrun))+".csv"        
+        if runIndex != None:
+            filename_train = address+"Data_store/GMM_classes_"+space+"/GMM_classes_"+space+str(int(d))+"_run"+str(int(runIndex))+".csv"        
 
         file_train = open(filename_train,'w')
         columns_train = np.column_stack((class_number_array, gmm_weights, gmm_means[:,i], gmm_covariances[:,i]))
@@ -423,7 +423,7 @@ def printGMMclasses(address, nrun, class_number_array, gmm_weights, gmm_means,\
         del filename_train, file_train
         i = i + 1
         
-def readGMMclasses(address, nrun, depth_array, space):
+def readGMMclasses(address, runIndex, depth_array, space):
     print("Print.readGMMclasses "+space)
     # space is either 'depth', 'reduced' or 'uncentred'
     # depth_number is either col_reduced or len(depth)
@@ -432,8 +432,8 @@ def readGMMclasses(address, nrun, depth_array, space):
     i = 0
     for d in depth_array:
         filename_train = address+"Data_store/GMM_classes_"+space+"/GMM_classes_"+space+str(int(d))+".csv"        
-        if nrun != None:
-            filename_train = address+"Data_store/GMM_classes_"+space+"/GMM_classes_"+space+str(int(d))+"_run"+str(int(nrun))+".csv"     
+        if runIndex != None:
+            filename_train = address+"Data_store/GMM_classes_"+space+"/GMM_classes_"+space+str(int(d))+"_run"+str(int(runIndex))+".csv"     
 
         csvfile_train = np.genfromtxt(filename_train, delimiter=",",skip_header=head_number)
         
@@ -459,11 +459,11 @@ def readGMMclasses(address, nrun, depth_array, space):
     return gmm_weights, gmm_means, gmm_covariances
 
 ###############################################################################
-def printLabels(address, nrun, lon, lat, dynHeight, varTime, labels):
+def printLabels(address, runIndex, lon, lat, dynHeight, varTime, labels):
     print("Print.printLabels")
     filename = address+"Data_store/Labels/Labels.csv"
-    if nrun != None:
-        filename = address+"Data_store/Labels/Labels_run"+str(nrun)+".csv"        
+    if runIndex != None:
+        filename = address+"Data_store/Labels/Labels_run"+str(runIndex)+".csv"        
 
     file = open(filename,'w')
     columns = np.column_stack(( lon, lat, dynHeight, varTime, labels ))
@@ -476,12 +476,12 @@ def printLabels(address, nrun, lon, lat, dynHeight, varTime, labels):
     file.close() 
     del filename, file
     
-def readLabels(address,nrun):
+def readLabels(address,runIndex):
     print("Print.readLabels")
     head_number = 1
     filename = address+"Data_store/Labels/Labels.csv"
-    if nrun != None:
-        filename = address+"Data_store/Labels/Labels_run"+str(nrun)+".csv"
+    if runIndex != None:
+        filename = address+"Data_store/Labels/Labels_run"+str(runIndex)+".csv"
         
     csvfile = np.genfromtxt(filename, delimiter=",",skip_header=head_number)
     
@@ -497,7 +497,7 @@ def readLabels(address,nrun):
 
 ###############################################################################
     
-def printPosteriorProb(address, nrun, lon, lat, dynHeight, varTime, post_prob, class_number_array):
+def printPosteriorProb(address, runIndex, lon, lat, dynHeight, varTime, post_prob, class_number_array):
     print("Print.printPosteriorProb")
     i = 0
     for class_number in class_number_array:
@@ -514,7 +514,7 @@ def printPosteriorProb(address, nrun, lon, lat, dynHeight, varTime, post_prob, c
         del filename, file
         i = i + 1
         
-def readPosteriorProb(address,nrun,class_number_array):
+def readPosteriorProb(address,runIndex,class_number_array):
     print("Print.readPosteriorProb")
     head_number = 1
     i = 0
@@ -544,7 +544,7 @@ def readPosteriorProb(address,nrun,class_number_array):
     return lon, lat, dynHeight, varTime, post_prob
         
 ###############################################################################
-def printReconstruction(address, nrun, lon, lat, dynHeight, X, XC, varTime, depth, isTrain):
+def printReconstruction(address, runIndex, lon, lat, dynHeight, X, XC, varTime, depth, isTrain):
     print("Print.printReconstruction isTrain = "+str(isTrain))
     # isTrain is True or False
     i = 0
@@ -564,7 +564,7 @@ def printReconstruction(address, nrun, lon, lat, dynHeight, X, XC, varTime, dept
         del filename, file
         i = i + 1
         
-def readReconstruction(address, nrun, depth, isTrain):
+def readReconstruction(address, runIndex, depth, isTrain):
     print("Print.readReconstruction isTrain = "+str(isTrain))
     # Function reads the Reconstructed XR, XRC, XR_Train, XRC_Train
     head_number = 1

@@ -24,7 +24,7 @@ import Print
 
 start_time = time.clock()
 
-def main(address, filename_raw_data, run, subsample_uniform, subsample_random,\
+def main(address, filename_raw_data, runIndex, subsample_uniform, subsample_random,\
          subsample_inTime, grid, conc, fraction_train, inTime_start, inTime_finish,\
          fraction_nan_samples, fraction_nan_depths, cov_type, run_bic=False):
     print("Starting Load.main")
@@ -54,7 +54,7 @@ def main(address, filename_raw_data, run, subsample_uniform, subsample_random,\
     # I also change the nomenaculature at this point in the code
     """ It is important that the training data set initialises the standardised object !! """
     print("Centre and standardise the training dataset")
-    stand, stand_store, varTrain_centre = centreAndStandardise(address, run, Tint_train)
+    stand, stand_store, varTrain_centre = centreAndStandardise(address, runIndex, Tint_train)
     var_centre = stand.transform(Tint)  # Centre the full dataset based on the training data set
     
     """ Create the test dataset, by subtracting the set(var_train) from set(var)"""
@@ -77,13 +77,13 @@ def main(address, filename_raw_data, run, subsample_uniform, subsample_random,\
 #    print("Starting Print")
     print("varTrain_centre.shape = ", varTrain_centre.shape)
     if not run_bic:
-        Print.printLoadToFile(address, run, lon, lat, dynHeight, Tint, var_centre, Sint, varTime, \
+        Print.printLoadToFile(address, runIndex, lon, lat, dynHeight, Tint, var_centre, Sint, varTime, \
                               depth)
-        Print.printLoadToFile_Train(address, run, lon_train, lat_train, dynHeight_train, Tint_train, \
+        Print.printLoadToFile_Train(address, runIndex, lon_train, lat_train, dynHeight_train, Tint_train, \
                                 varTrain_centre, Sint_train, varTime_train, depth)
-        #Print.printLoadToFile_Test(address, run, lon_test, lat_test, dynHeight_test, Tint_test, \
+        #Print.printLoadToFile_Test(address, runIndex, lon_test, lat_test, dynHeight_test, Tint_test, \
         #                        varTest_centre, Sint_test, varTime_test, depth)
-        Print.printDepth(address, run, depth)
+        Print.printDepth(address, runIndex, depth)
     
     if run_bic:
         return lon_train, lat_train, dynHeight_train, Tint_train, varTrain_centre, Sint_train, varTime_train
@@ -342,7 +342,7 @@ def inTimeTrain(lon, lat, dynHeight, Tint, Sint, varTime, depth, inTime_start, i
     
     return lon_train, lat_train, dynHeight_train, Tint_train, Sint_train, varTime_train
 ###############################################################################
-def centreAndStandardise(address, run, VAR):
+def centreAndStandardise(address, runIndex, VAR):
     print("Load.centreAndStandardise")
     """ Function to creat a standardised object using the training data set """
     stand_store = address+"Objects/Scale_object.pkl"

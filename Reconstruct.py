@@ -24,7 +24,7 @@ import Print
 
 start_time = time.clock()
 
-def gmm_reconstruct(address, run, n_comp):
+def gmm_reconstruct(address, runIndex, n_comp):
     print("Reconstruct.gmm_reconstruct")
     # Load the pca object for the inverse transform
     pca = None
@@ -38,17 +38,17 @@ def gmm_reconstruct(address, run, n_comp):
     
     # Load col_reduced value
     col_reduced = None
-    col_reduced = Print.readColreduced(address, run)
+    col_reduced = Print.readColreduced(address, runIndex)
     col_reduced_array = np.arange(col_reduced)
     
     # Load depth
     depth = None
-    depth = Print.readDepth(address, run)
+    depth = Print.readDepth(address, runIndex)
     
     # Load the gmm properties
     gmm_weights, gmm_means, gmm_covariances = None, None, None
     gmm_weights, gmm_means, gmm_covariances = \
-            Print.readGMMclasses(address, run, col_reduced_array, 'reduced')
+            Print.readGMMclasses(address, runIndex, col_reduced_array, 'reduced')
     
     """ Finished loading, now inverse transform and print """
     
@@ -60,20 +60,20 @@ def gmm_reconstruct(address, run, n_comp):
     
     # Print the results to a file
     class_number_array = np.arange(0,n_comp)
-    Print.printGMMclasses(address, run, class_number_array, weights, means, covariances, depth, 'depth')
+    Print.printGMMclasses(address, runIndex, class_number_array, weights, means, covariances, depth, 'depth')
     
     # Un-centre the GMM class information
     weights_UC, means_UC, covariances_UC = None, None, None
     weights_UC = weights
     means_UC = stand.inverse_transform(means)
     covariances_UC = stand.inverse_transform(covariances)
-    Print.printGMMclasses(address, run, class_number_array, weights_UC, means_UC, covariances_UC, depth, 'uncentred')
+    Print.printGMMclasses(address, runIndex, class_number_array, weights_UC, means_UC, covariances_UC, depth, 'uncentred')
 
     
     del pca, stand
 ###############################################################################
     
-def train_reconstruct(address, run):
+def train_reconstruct(address, runIndex):
     print("Reconstruct.train_reconstruct")
     # Load the pca object for the inverse transform
     pca = None
@@ -86,16 +86,16 @@ def train_reconstruct(address, run):
         
     # Load col_reduced value
     col_reduced, col_reduced_array = None, None
-    col_reduced = Print.readColreduced(address, run)
+    col_reduced = Print.readColreduced(address, runIndex)
     col_reduced_array = np.arange(col_reduced)
     
     # Load depth
     depth = None
-    depth = Print.readDepth(address, run)
+    depth = Print.readDepth(address, runIndex)
     
     # Load the training varaible
     lon_train, lat_train, dynHeight_train, X_train_array, varTime_train = None, None, None, None, None
-    lon_train, lat_train, dynHeight_train, X_train_array, varTime_train = Print.readPCAFromFile_Train(address, run, col_reduced)
+    lon_train, lat_train, dynHeight_train, X_train_array, varTime_train = Print.readPCAFromFile_Train(address, runIndex, col_reduced)
     
     # Reconstruct
     XRC_train = None     # R = reconstructed, C = centred
@@ -106,9 +106,9 @@ def train_reconstruct(address, run):
     XR_train = stand.inverse_transform(XRC_train)
     
     # Print the results to a file
-    Print.printReconstruction(address, run, lon_train, lat_train, dynHeight_train, XR_train, XRC_train, varTime_train, depth, True)
+    Print.printReconstruction(address, runIndex, lon_train, lat_train, dynHeight_train, XR_train, XRC_train, varTime_train, depth, True)
     
-def full_reconstruct(address, run):
+def full_reconstruct(address, runIndex):
     print("Reconstruct.full_reconstruct")
     # Load the pca object for the inverse transform
     pca = None
@@ -122,16 +122,16 @@ def full_reconstruct(address, run):
     
     # Load col_reduced value
     col_reduced, col_reduced_array = None, None
-    col_reduced = Print.readColreduced(address, run)
+    col_reduced = Print.readColreduced(address, runIndex)
     col_reduced_array = np.arange(col_reduced)
     
     # Load depth
     depth = None
-    depth = Print.readDepth(address, run)
+    depth = Print.readDepth(address, runIndex)
     
     # Load the training varaible
     lon, lat, dynHeight, X_array, varTime = None, None, None, None, None
-    lon, lat, dynHeight, X_array, varTime = Print.readPCAFromFile(address, run, col_reduced)
+    lon, lat, dynHeight, X_array, varTime = Print.readPCAFromFile(address, runIndex, col_reduced)
     
     # Reconstruct
     XRC = None     # R = reconstructed, C = centred
@@ -142,8 +142,6 @@ def full_reconstruct(address, run):
     XR = stand.inverse_transform(XRC)
     
     # Print the results to a file
-    Print.printReconstruction(address, run, lon, lat, dynHeight, XR, XRC, varTime, depth, False)
-    
-    
+    Print.printReconstruction(address, runIndex, lon, lat, dynHeight, XR, XRC, varTime, depth, False)
 
 print('Reconstruct runtime = ', time.clock() - start_time,' s')
