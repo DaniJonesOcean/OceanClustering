@@ -2,7 +2,7 @@
 """
 Created on Wed Aug 16 10:36:46 2017
 
-@author: harryholt
+@authors: harryholt, DanJonesOcean
 
 Main.py
 
@@ -24,58 +24,80 @@ The should be flexibility in seclecting the Data set, the locations of the
 input and output files, the ML algorithm we want to use and the option to loop
 over the files/modules themselves
 """
-# Import the various modules necessary
+
+""" Initial setup """
+
+# import modules
 import time
 import numpy as np
-
+import scipy as sp
 import Load, Print, PCA, GMM, Reconstruct, Bic
 import Plot
 
+# start the clock (performance timing)
 start_time = time.clock()
 
-""" Define some initial conditions, locations and parameters """
-n_comp = 8                # number of classes in GMM object
-n_dimen = 0.999           # amount of variance retained in PCA
-cov_type = 'full'    # specify covariance type (full, tied, diag, or spherical)
-loop = False              # do we want to loop the program
-if loop:
-    runIndex_total = 25   # number of times we want to loop
+# set run mode (BIC, GMM, or Plot)
+# -- BIC = calculates BIC scores for a range of classes
+# -- GMM = performs GMM procedure (no BIC, no plots)
+# -- Plot = plots the results (located in address+ploc)
+run_mode = "Plot"
 
-# set locations
-address = "/data/expose/OceanClustering/"     # location of program
-filename_raw_data = "/data/expose/OceanClustering/Data_in/SO_Argo_all.mat"   # location of raw data
+# plot ACC fronts 
+plotFronts = False
+
+# set parameters
+n_comp = 8           # number of classes in GMM object
+n_dimen = 0.999      # amount of variance retained in PCA
+cov_type = 'full'    # covariance type (full, tied, diag, or spherical)
+
+# put here for a quick fix 
+# we can get rid of this variable in a later version of the code
+runIndex = None
+
+# root location of program 
+address = "/data/expose/OceanClustering/"     
+# location of data to plot (make sure n_comp is correct)
+ploc = address + "n08_classes/"
+# location of raw data file
+filename_raw_data = "/data/expose/OceanClustering/Data_in/SO_Argo_all.mat"  
+# root location of ACC front files
 address_fronts = "/data/expose/OceanClustering/Data_in/Fronts/"
 
-# Define some flags relevant for BIC calculations
-run_bic = False       # do we want to calculate the BIC scores ?
+# define some flags relevant for BIC calculations
+# if run_bic = True, program will calculate BIC scores
+run_bic = (run_mode=="BIC")       
 if run_bic:
     subsample_bic = "uniform"
     repeat_bic = 50
-    max_groups = 20     # Highest number of GMM classes tested
+    max_groups = 20     # highest number of GMM classes tested
     grid_bic = 4        # size of cell in lat/lon degrees
-    conc_bic = 1        # # of samples from each grid
-    size_bic = 1100     # Ideal size of the BIC training set
+    conc_bic = 1        # number of samples from each grid
+    size_bic = 1100     # ideal size of the BIC training set
 
-subsample_uniform = True  # Indicates how the Training dataset is selected
-subsample_random = False  # Indicates how the Training dataset is selected
+subsample_uniform = True  # indicates how the training dataset is selected
+subsample_random = False  # indicates how the training dataset is selected
 subsample_inTime = False
 
 # declare some empty variables
-grid, conc, fraction_train, inTime_start, inTime_finish = None, None, None, None, None
+grid, conc, fraction_train, inTime_start, inTime_finish = \
+None, None, None, None, None
 
 if subsample_uniform:
     grid = 1        # size of cell in lat/lon degrees
-    conc = 1    # # of samples from each grid
+    conc = 1        # number of samples from each grid
 if subsample_random:
-    fraction_train = 0.1  # Size of Training dataset as a fraction of whole dataset
+    # size of training dataset as a fraction of whoel dataset
+    fraction_train = 0.1  
 if subsample_inTime:
     inTime_start = 0.0      # WRONG AT THE MOMENT
     inTime_finish = 200.0   # WRONG AT THE MOMENT
 
-fraction_nan_samples = 16.0 # If a vertical sample has more than this fraction, it's removed
-fraction_nan_depths = 32.0  # If a depth level across all samples has " " " ", it's removed
+# cutoff values 
+# - profiles/depths with > NaN percentages will be removed
+fraction_nan_samples = 16.0 
+fraction_nan_depths = 32.0 
 """ end of initialisation conditions """
-
 
 ###############################################################################
 ###############################################################################
@@ -88,42 +110,36 @@ def main(runIndex=None):
     makeDirectoryStructure(address)
 
     # now start the GMM process
-    Load.main(address, filename_raw_data, runIndex, subsample_uniform, subsample_random,\
-               subsample_inTime, grid, conc, fraction_train, inTime_start, inTime_finish,\
-               fraction_nan_samples, fraction_nan_depths, cov_type, run_bic=False)
+    Load.main(address, filename_raw_data, runIndex, subsample_uniform,\
+              subsample_random, subsample_inTime, grid, conc, \
+              fraction_train, inTime_start, inTime_finish,\
+              fraction_nan_samples, fraction_nan_depths, cov_type,\
+              run_bic=False)
 
     # loads data, selects Train, cleans, centres/standardises, prints
-    PCA.create(address, runIndex, n_dimen)     # uses train to create PCA, prints results, stores object
-    GMM.create(address, runIndex, n_comp, cov_type)      # uses train to create GMM, prints results, stores object
-   
-    PCA.apply(address, runIndex)               # applies PCA to test dataset     
-    GMM.apply(address, runIndex, n_comp)       # applies GMM to test dataset
+    PCA.create(address, runIndex, n_dimen)     
+    GMM.create(address, runIndex, n_comp, cov_type)   
+    PCA.apply(address, runIndex)                   
+    GMM.apply(address, runIndex, n_comp)     
     
-    # reconstruction
-    Reconstruct.gmm_reconstruct(address, runIndex, n_comp)  # reconstructs the results in original space
+    # reconstruction (back into depth space)
+    Reconstruct.gmm_reconstruct(address, runIndex, n_comp)  
     Reconstruct.full_reconstruct(address, runIndex)
     Reconstruct.train_reconstruct(address, runIndex)
     
-    # plotting
+# function that only carries out plotting 
+def mainPlot(address, address_fronts, runIndex, n_comp, plotFronts):
     Plot.plotMapCircular(address, address_fronts, runIndex, n_comp)
-
-    Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp)
-    
+#   Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp)
     Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=False)
-
     Plot.plotProfileClass(address, runIndex, n_comp, 'uncentred')
     Plot.plotProfileClass(address, runIndex, n_comp, 'depth')
-
     Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced')
-#    Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'depth') # ERROR NOT WOKRING PROPERLY
-#    Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'uncentred') # ERROR NOT WOKRING PROPERLY
-    
     Plot.plotProfile(address, runIndex, 'original')
     Plot.plotProfile(address, runIndex, 'uncentred')
-    
     Plot.plotWeights(address, runIndex)
 
-""" Create directory structure if it does not exist """
+""" If directory structure does not exist, create it """
 def makeDirectoryStructure(address):
     import os
     # make Data_store
@@ -195,42 +211,7 @@ def makeDirectoryStructure(address):
     if not os.path.exists(mydir):
         os.makedirs(mydir)
     
-""" Opt to runIndex different sections or variations of the program """
-
-def loopMain(runIndex_total):
-    for runIndex in range(1,runIndex_total+1):    # Ensures loop starts from runIndex = 1
-        print("RUN NUMBER ", str(runIndex))
-        main(runIndex)
-        
-        lon, lat, dynHeight, varTime, labels_runIndex = None, None, None, None, None
-        lon, lat, dynHeight, varTime, labels_runIndex = Print.readLabels(address, runIndex)
-        if runIndex == 1:
-            labels_loop   = labels_runIndex.reshape(labels_runIndex.size,1)
-        else:
-            labels_runIndex = labels_runIndex.reshape(labels_runIndex.size,1)
-            labels_loop = np.hstack([labels_loop, labels_runIndex])
-        print("RUN NUMBER ", str(runIndex)," finish time = ", time.clock() - start_time)
-        # Labels shape should be (# profiles, # runIndexs)
-    axis = 1
-    labels_mostFreq, indices = np.unique(labels_loop, return_inverse=True)
-    labels_mostFreq = labels_mostFreq[np.argmax(np.apply_along_axis(np.bincount, axis, indices.reshape(labels_loop.shape),
-                                None, np.max(indices) + 1), axis=axis)]    
-    Print.printLabels(address, 'Total', lon, lat, dynHeight, varTime, labels_mostFreq)
-    del runIndex
-#    Plot.loop(address, runIndex_total)   # Plot the results fo the looped program
-    
-
-if run_bic:
-    Bic.main(address, filename_raw_data,subsample_bic, repeat_bic, max_groups, \
-             grid_bic, conc_bic, size_bic, n_dimen, fraction_nan_samples, \
-             fraction_nan_depths, cov_type)
-    
-    Plot.plotBIC(address, repeat_bic, max_groups)
-elif loop:
-    loopMain(runIndex_total)
-else:
-    main()
-
+""" Program starts here """
 """ Process
     - Choose between BIC and GMM
     - Load, clean, select train
@@ -243,5 +224,19 @@ else:
     - Plot the result
     """
 
+# main program loop 
+if (run_mode=="BIC"):
+	Bic.main(address, filename_raw_data,subsample_bic, repeat_bic, max_groups, \
+        	grid_bic, conc_bic, size_bic, n_dimen, fraction_nan_samples, \
+        	fraction_nan_depths, cov_type)
+	Plot.plotBIC(address, repeat_bic, max_groups)
+elif (run_mode=="GMM"):
+	main()
+elif (run_mode=="Plot"):
+	mainPlot(ploc, address_fronts, runIndex, n_comp, plotFronts) 
+else:
+	print('Parameter run_mode not set properly. Check Main.py')
+
+# print runtime for performance
 print('Main runtime = ', time.clock() - start_time,' s')
     
