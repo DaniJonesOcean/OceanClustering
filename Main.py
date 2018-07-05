@@ -43,6 +43,10 @@ start_time = time.clock()
 # -- Plot = plots the results (located in address+ploc)
 run_mode = "Plot"
 
+# if you want to use fPCA, set this flag to 'true'
+use_fPCA = True
+Bspline_degrees = 4
+
 # plot ACC fronts 
 plotFronts = False
 
@@ -106,7 +110,7 @@ fraction_nan_depths = 32.0
 def main(runIndex=None):
     print("Starting Main.main()")  
     
-    # if it doesn't exist, create directory structure
+    # if the required directory structure doesn't exist, create it
     makeDirectoryStructure(address)
 
     # now start the GMM process
@@ -116,8 +120,8 @@ def main(runIndex=None):
               fraction_nan_samples, fraction_nan_depths, cov_type,\
               run_bic=False)
 
-    # loads data, selects Train, cleans, centres/standardises, prints
-    PCA.create(address, runIndex, n_dimen)     
+    # loads data, selects train, cleans, centres/standardises, prints
+    PCA.create(address, runIndex, n_dimen, use_fPCA, Bspline_degrees)     
     GMM.create(address, runIndex, n_comp, cov_type)   
     PCA.apply(address, runIndex)                   
     GMM.apply(address, runIndex, n_comp)     
@@ -139,7 +143,7 @@ def mainPlot(address, address_fronts, runIndex, n_comp, plotFronts):
     Plot.plotProfile(address, runIndex, 'uncentred')
     Plot.plotWeights(address, runIndex)
 
-""" If directory structure does not exist, create it """
+""" If the required directory structure does not exist, create it """
 def makeDirectoryStructure(address):
     import os
     # make Data_store

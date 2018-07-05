@@ -15,32 +15,42 @@ Purpose:
 
 import pickle
 from sklearn import decomposition
+from scipy.interpolate import PPoly
 import numpy as np
+import scipy as sp
 import time
 
 import Print
 
 start_time = time.clock()
 
-def create(address, runIndex, n_dimen):
-    print("PCA.create")
+def create(address, runIndex, n_dimen, use_fPCA):
+    print("Entering function PCA.create")
     """ This function takes the training dataset and creates the PCA object,
     whilst returning the transfromed dataset """
     
-    # Load depth
+    # load depth
     depth = None
     depth = Print.readDepth(address, runIndex)
     
-    # Load Training data
+    # load training data
     lon_train, lat_train, dynHeight_train, Tint_train_array, X_train_array, \
-            Sint_train_array, varTime_train = None, None, None, None, None, None, None
+            Sint_train_array, varTime_train = \
+            None, None, None, None, None, None, None
     lon_train, lat_train, dynHeight_train, Tint_train_array, X_train_array, \
-            Sint_train_array, varTime_train = Print.readLoadFromFile_Train(address, runIndex, depth)
+            Sint_train_array, varTime_train = \
+            Print.readLoadFromFile_Train(address, runIndex, depth)
     
-    # Start the PCA process
-    pca, pca_store, X_pca_train, variance_sum = None, None, None, None
-    pca, pca_store, X_pca_train, variance_sum  = PrincipleComponentAnalysis( address, runIndex, X_train_array, n_dimen)
-    col_reduced = np.size(X_pca_train,1)    # Variable retains the number of reduced dimensions
+    # start the PCA process
+    pca, pca_store, X_pca_train, variance_sum = \
+            None, None, None, None
+    pca, pca_store, X_pca_train, variance_sum  = \
+            PrincipalComponentAnalysis( address, runIndex, \
+                                        X_train_array, n_dimen, \
+                                        use_fPCA)
+
+    # variable col_reduced retains number of reduced dimensions
+    col_reduced = np.size(X_pca_train,1)   
     
     """ Now we can print the reduced training dataset to a file """
 #    print("Starting Print PCA")
@@ -80,14 +90,24 @@ def apply(address, runIndex):
     
 ###############################################################################    
     
-def PrincipleComponentAnalysis( address, runIndex, X_train, n_dimen):
-    print("PCA.PrincipleComponentAnalysis")
-    """ This function initialises the PCA object and is called in create() """
-    pca = decomposition.PCA(n_components = n_dimen)     # Initialise PCA object
-    pca.fit(X_train)    # Fit the PCA to the training data
-    X_pca_train = pca.transform(X_train)    # transform the Training Data set to reduced space
+def PrincipalComponentAnalysis(address, runIndex, X_train, \
+                               n_dimen, use_fPCA, Bspline_degrees):
+    print("PCA.PrincipalComponentAnalysis")
+    """ Initialises the PCA object and is called in create() """
+    # initialise PCA object
+    pca = decomposition.PCA(n_components = n_dimen) 
+    # if use_fPCA=True, interpolate into BSpline basis   
+    if use_fPCA==True:
+        X_train = convert2Bspline(depth,X_train,Bspline_degrees)
+
+    # fit the PCA to the training data 
+    pca.fit(X_train)   
+    # transform the training data to reduced PCA/EOF space
+    X_pca_train = pca.transform(X_train)    
+    # get the variance explained by each principal component
     variance_sum = np.cumsum(pca.explained_variance_ratio_)
-    
+   
+    # store the results as a PKL object 
     pca_store = address+"Objects/PCA_object.pkl"    
     with open(pca_store, 'wb') as output:
         pcaObject = pca
@@ -97,3 +117,32 @@ def PrincipleComponentAnalysis( address, runIndex, X_train, n_dimen):
     return pca, pca_store, X_pca_train, variance_sum
 
 print('PCA runtime = ', time.clock() - start_time,' s')
+
+###############################################################################  
+
+def X_train_out = convert2Bspline(depth, X_train_in, Bspline_degrees):
+    print('Converting to Bspline basis')
+
+    # if Bspline_degrees is large, the difference is very small
+    # for example, for Bspline_degrees=4 
+    # the difference is order 10^{-15}
+
+    # fPCA applies PCA to the coefficients of the Bspline model
+
+    # initialise empty array
+    X_train_out = np.empty([X_train_in.shape[0],X_train_in.shape[1]])
+
+    # create spl object, evaluate on pressure levels
+    for nprof in range(0,X_train_in.shape[0]):
+        x = depth
+        y = X_train_in[nprof,:]
+        spl = sp.interpolate.splrep(x, y)
+        y2 = sp.interpolate.splev(x, spl)
+        X_train_out[nprof,:] = y2
+
+    # return B-spline basis points
+    return X_train_out
+     
+
+
+

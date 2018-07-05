@@ -26,7 +26,8 @@ def printDepth(address, runIndex, depth):
     filename = address+"Data_store/Info/Depth_retained.csv"
     file = open(filename,'w')
     data = depth.reshape(len(depth),1)
-    writer = csv.DictWriter(file, fieldnames = ['Depth'], delimiter = separator)
+    writer = csv.DictWriter(file, fieldnames = ['Depth'], \
+                            delimiter = separator)
     writer.writeheader()
     writer = csv.writer(file, delimiter=separator)
     for line in data:
@@ -38,7 +39,8 @@ def readDepth(address, runIndex):
     filename = address+"Data_store/Info/Depth_retained.csv"
     depth = None
     head_number = 1
-    csvfile = np.genfromtxt(filename, delimiter=",",skip_header=head_number)
+    csvfile = np.genfromtxt(filename, delimiter=",",\
+                            skip_header=head_number)
     depth = csvfile[:]
     return depth
 
@@ -48,7 +50,8 @@ def printColreduced(address, runIndex, col_reduced):
     filename = address+"Data_store/Info/Col_reduced.csv"
     file = open(filename,'w')
     data = [col_reduced]
-    writer = csv.DictWriter(file, fieldnames = ['Col_reduced'], delimiter = separator)
+    writer = csv.DictWriter(file, fieldnames = ['Col_reduced'], \
+                            delimiter = separator)
     writer.writeheader()
     writer = csv.writer(file, delimiter=separator)
     writer.writerow(data)
@@ -59,7 +62,8 @@ def readColreduced(address, runIndex):
     filename = address+"Data_store/Info/Col_reduced.csv"
     col_reduced = None
     head_number = 1
-    csvfile = np.genfromtxt(filename, delimiter=",",skip_header=head_number)
+    csvfile = np.genfromtxt(filename, delimiter=",",\
+                            skip_header=head_number)
     col_reduced = int(csvfile)
     print("col_reduced = ", col_reduced)
     return col_reduced
@@ -67,7 +71,8 @@ def readColreduced(address, runIndex):
     
 ###############################################################################
 # BIC printing and loading
-def printBIC(address, repeat_bic, bic_many, bic_mean, bic_stdev, n_mean, n_stdev, n_min):
+def printBIC(address, repeat_bic, bic_many, bic_mean, bic_stdev, \
+             n_mean, n_stdev, n_min):
     print("Print.printBIC")
     print("SHAPE OF BIC MANY = ", bic_many.shape)
     data, columns = None, None
@@ -77,7 +82,9 @@ def printBIC(address, repeat_bic, bic_many, bic_mean, bic_stdev, n_mean, n_stdev
     file = open(filename, 'w')
     columns = np.column_stack((n_mean, n_stdev, n_min))
     data = columns
-    writer = csv.DictWriter(file, fieldnames = ['n_mean_from_ave_nmin_individual','n_stdev','n_min_from_bic_mean'], delimiter = separator)
+    writer = csv.DictWriter(file, fieldnames = \
+        ['n_mean_from_ave_nmin_individual','n_stdev','n_min_from_bic_mean'], \
+        delimiter = separator)
     writer.writeheader()
     writer = csv.writer(file, delimiter=separator)
     for line in data:
@@ -92,7 +99,9 @@ def printBIC(address, repeat_bic, bic_many, bic_mean, bic_stdev, n_mean, n_stdev
         data, columns = None, None
         columns = np.column_stack((bic_many[r,:], bic_mean, bic_stdev))
         data = columns
-        writer = csv.DictWriter(file, fieldnames = ['bic_many'+str(int(r)),'bic_mean','bic_stdev'], delimiter = separator)
+        writer = csv.DictWriter(file, fieldnames = \
+                 ['bic_many'+str(int(r)),'bic_mean','bic_stdev'], \
+                 delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file, delimiter=separator)
         for line in data:
@@ -101,11 +110,12 @@ def printBIC(address, repeat_bic, bic_many, bic_mean, bic_stdev, n_mean, n_stdev
         del filename, file
 
 def readBIC(address, repeat_bic):
-    # This section reads the information on components, minimum scores and means
+    # reads the information on components, minimum scores and means
     n_mean, n_stdev, n_min = None, None, None
     head_number = 1
     filename = address+"Data_store/Info/BIC_Info.csv"
-    csvfile = np.genfromtxt(filename, delimiter=",",skip_header=head_number)
+    csvfile = np.genfromtxt(filename, delimiter=",",\
+                            skip_header=head_number)
     n_mean  = csvfile[0]
     n_stdev = csvfile[1]
     n_min   = csvfile[2]
@@ -117,7 +127,8 @@ def readBIC(address, repeat_bic):
     for r in range(repeat_bic):
         filename = address+"Data_store/Info/BIC_r"+str(int(r))+".csv"
         
-        csvfile = np.genfromtxt(filename, delimiter=",",skip_header=head_number)
+        csvfile = np.genfromtxt(filename, delimiter=",",\
+                                skip_header=head_number)
         
         if r == 0:
             bic_mean     = csvfile[:,1]
@@ -137,17 +148,24 @@ def readBIC(address, repeat_bic):
 
 ###############################################################################
 # Load Printing
-def printLoadToFile(address, runIndex, lon, lat, dynHeight, Tint, var_centre, Sint, varTime, \
-                          depth ):
+def printLoadToFile(address, runIndex, lon, lat, dynHeight, Tint, \
+                    var_centre, Sint, varTime, depth ):
     print("Print.printLoadToFile")
     i = 0 
     for d in depth:
-        filename = address+"Data_store/CentredAndUncentred/CentredAndUncentred_depth"+str(int(d))+".csv"
+        filename = address+\
+                   "Data_store/CentredAndUncentred/CentredAndUncentred_depth"+\
+                   str(int(d))+".csv"
 
         file = open(filename,'w')
-        columns= np.column_stack((lon, lat, dynHeight, Tint[:,i], var_centre[:,i], Sint[:,i], varTime))
+        columns= np.column_stack((lon, lat, dynHeight, \
+                                 Tint[:,i], var_centre[:,i], \
+                                 Sint[:,i], varTime))
         data = columns
-        writer = csv.DictWriter(file, fieldnames = ['lon','lat','dynHeight','Tint_'+str(int(d)),'Tint_centred','Sint','Time'], delimiter = separator)
+        writer = csv.DictWriter(file, fieldnames = \
+                               ['lon','lat','dynHeight',\
+                               'Tint_'+str(int(d)),'Tint_centred',\
+                               'Sint','Time'], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file, delimiter=separator)
         for line in data:
@@ -157,18 +175,28 @@ def printLoadToFile(address, runIndex, lon, lat, dynHeight, Tint, var_centre, Si
         
         i = i + 1
         
-def printLoadToFile_Train(address, runIndex, lon_train, lat_train, dynHeight_train, Tint_train, \
+def printLoadToFile_Train(address, runIndex, lon_train, lat_train, \
+                          dynHeight_train, Tint_train, \
                           varTrain_centre, Sint_train, varTime_train,\
                           depth ):
     print("Print.printLoadToFile_Train")
     i = 0 
     for d in depth:
-        filename_train = address+"Data_store/CentredAndUncentred_Train/CentredAndUncentred_Train_depth"+str(int(d))+".csv"        
+        filename_train = address+\
+                         "Data_store/CentredAndUncentred_Train/CentredAndUncentred_Train_depth"\
+                         +str(int(d))+".csv"        
 
         file_train = open(filename_train,'w')
-        columns_train = np.column_stack((lon_train, lat_train, dynHeight_train, Tint_train[:,i], varTrain_centre[:,i], Sint_train[:,i], varTime_train))
+        columns_train = np.column_stack((lon_train, lat_train, \
+                                        dynHeight_train, Tint_train[:,i], \
+                                        varTrain_centre[:,i], Sint_train[:,i], \
+                                        varTime_train))
         data_train = columns_train
-        writer = csv.DictWriter(file_train, fieldnames = ['lon_train','lat_train','dynHeight_train','VAR_train_'+str(int(d)),'Var_train_centred','Sint_train','Time_train'], delimiter = separator)
+        writer = csv.DictWriter(file_train, \
+                        fieldnames = ['lon_train','lat_train','dynHeight_train',\
+                                      'VAR_train_'+str(int(d)),'Var_train_centred',\
+                                      'Sint_train','Time_train'], \
+                                       delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file_train, delimiter=separator)    
         for line in data_train:
@@ -183,12 +211,20 @@ def printLoadToFile_Test(address, runIndex, lon_test, lat_test, dynHeight_test, 
     print("Print.printLoadToFile_Test")
     i = 0 
     for d in depth:
-        filename_test = address+"Data_store/CentredAndUncentred_Test/CentredAndUncentred_Test_depth"+str(int(d))+".csv"        
+        filename_test = address+\
+           "Data_store/CentredAndUncentred_Test/CentredAndUncentred_Test_depth"+\
+           str(int(d))+".csv"        
 
         file_test = open(filename_test,'w')
-        columns_test = np.column_stack((lon_test, lat_test, dynHeight_test, Tint_test[:,i], varTest_centre[:,i], Sint_test[:,i], varTime_test))
+        columns_test = np.column_stack((lon_test, lat_test, \
+                       dynHeight_test, Tint_test[:,i], varTest_centre[:,i], \
+                       Sint_test[:,i], varTime_test))
         data_test = columns_test
-        writer = csv.DictWriter(file_test, fieldnames = ['lon_test','lat_test','dynHeight_test','VAR_test_'+str(int(d)),'Var_test_centred','Sint_test','Time_test'], delimiter = separator)
+        writer = csv.DictWriter(file_test, \
+                      fieldnames = ['lon_test','lat_test',\
+                      'dynHeight_test','VAR_test_'+str(int(d)),\
+                      'Var_test_centred','Sint_test','Time_test'], \
+                      delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file_test, delimiter=separator)    
         for line in data_test:
@@ -200,14 +236,18 @@ def printLoadToFile_Test(address, runIndex, lon_test, lat_test, dynHeight_test, 
     
 def readLoadFromFile(address, runIndex, depth):
     print("Print.readLoadFromFile")
-    lon, lat, dynHeight, Tint, var, Sint, varTime = None, None, None, None, None, None, None
+    lon, lat, dynHeight, Tint, var, Sint, varTime = \
+        None, None, None, None, None, None, None
     head_number = 1
     i = 0
     for d in depth:
 #        print(i)
-        filename = address+"Data_store/CentredAndUncentred/CentredAndUncentred_depth"+str(int(d))+".csv"
+        filename = address+\
+           "Data_store/CentredAndUncentred/CentredAndUncentred_depth"+\
+           str(int(d))+".csv"
         
-        csvfile = np.genfromtxt(filename, delimiter=",",skip_header=head_number)
+        csvfile = np.genfromtxt(filename, delimiter=",",\
+                      skip_header=head_number)
         if i == 0:
             lon     = csvfile[:,0]
             lat     = csvfile[:,1]
@@ -236,14 +276,18 @@ def readLoadFromFile(address, runIndex, depth):
 
 def readLoadFromFile_Train(address, runIndex, depth):
     print("Print.readLoadFromFile_Train")
-    lon_train, lat_train, dynHeight_train, Tint_train, varTrain, Sint_train, varTime_train = None, None, None, None, None, None, None
+    lon_train, lat_train, dynHeight_train, Tint_train, varTrain, \
+        Sint_train, varTime_train = None, None, None, None, None, None, None
     head_number = 1
     i = 0
     for d in depth:
 #        print(i)
-        filename_train = address+"Data_store/CentredAndUncentred_Train/CentredAndUncentred_Train_depth"+str(int(d))+".csv"
+        filename_train = address+\
+            "Data_store/CentredAndUncentred_Train/CentredAndUncentred_Train_depth"+\
+            str(int(d))+".csv"
 
-        csvfile_train = np.genfromtxt(filename_train, delimiter=",",skip_header=head_number)
+        csvfile_train = np.genfromtxt(filename_train, delimiter=",",\
+                        skip_header=head_number)
         if i == 0:
             lon_train     = csvfile_train[:,0]
             lat_train     = csvfile_train[:,1]
@@ -274,14 +318,18 @@ def readLoadFromFile_Train(address, runIndex, depth):
             
 def readLoadFromFile_Test(address, runIndex, depth):
     print("Print.readLoadFromFile_Test")
-    lon_test, lat_test, dynHeight_test, Tint_test, varTest, Sint_test, varTime_test = None, None, None, None, None, None
+    lon_test, lat_test, dynHeight_test, Tint_test, varTest, \
+        Sint_test, varTime_test = None, None, None, None, None, None
     head_number = 1
     i = 0
     for d in depth:
 #        print(i)
-        filename_test = address+"Data_store/CentredAndUncentred_Test/CentredAndUncentred_Test_depth"+str(int(d))+".csv"
+        filename_test = address+\
+           "Data_store/CentredAndUncentred_Test/CentredAndUncentred_Test_depth"+\
+           str(int(d))+".csv"
 
-        csvfile_test = np.genfromtxt(filename_test, delimiter=",",skip_header=head_number)
+        csvfile_test = np.genfromtxt(filename_test, delimiter=",",\
+                       skip_header=head_number)
         if i == 0:
             lon_test     = csvfile_test[:,0]
             lat_test     = csvfile_test[:,1]
@@ -320,7 +368,9 @@ def printPCAToFile(address, runIndex, lon, lat, dynHeight, X_pca, varTime, col_r
         file = open(filename, 'w')
         columns = np.column_stack((lon, lat, dynHeight, X_pca[:,d], varTime))
         data = columns
-        writer = csv.DictWriter(file, fieldnames = ['lon','lat','dynHeight','VAR_'+str(int(d)),'Time'], delimiter = separator)
+        writer = csv.DictWriter(file, \
+            fieldnames = ['lon','lat','dynHeight','VAR_'+\
+            str(int(d)),'Time'], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file, delimiter=separator)    
         for line in data:
@@ -332,12 +382,17 @@ def printPCAToFile_Train(address, runIndex, lon_train, lat_train, dynHeight_trai
                                 X_pca_train, varTime_train, col_reduced):
     print("Print.printPCAToFile_Train")
     for d in range(col_reduced):
-        filename_train = address+"Data_store/PCA_Train/PCA_Train_reddepth"+str(d)+".csv"        
+        filename_train = address+\
+           "Data_store/PCA_Train/PCA_Train_reddepth"+\
+            str(d)+".csv"        
 
         file_train = open(filename_train,'w')
-        columns_train = np.column_stack((lon_train, lat_train, dynHeight_train, X_pca_train[:,d], varTime_train))
+        columns_train = np.column_stack((lon_train, lat_train, \
+            dynHeight_train, X_pca_train[:,d], varTime_train))
         data_train = columns_train
-        writer = csv.DictWriter(file_train, fieldnames = ['lon_train','lat_train','dynHeight_train','VAR_train_'+str(int(d)),'Time_train'], delimiter = separator)
+        writer = csv.DictWriter(file_train, fieldnames = \
+            ['lon_train','lat_train','dynHeight_train','VAR_train_'+\
+            str(int(d)),'Time_train'], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file_train, delimiter=separator)    
         for line in data_train:

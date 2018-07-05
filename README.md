@@ -6,7 +6,7 @@ Readme for GMM code:
 The combined program consists of 8 modules.
 - Main.py is the central script and determines the values of all the parameters to be used and which other scripts are called during a particular run. The file locations for the input data and output files are specified here.
 - Load.py loads, cleans, sub-samples and standardises the data for the rest of the program.
-- PCA.py both creates and applies the principle component analysis to the dataset, which is necessary to increase the computational speed of the program
+- PCA.py both creates and applies the principal component analysis to the dataset, which is necessary to increase the computational speed of the program
 - GMM.py creates and applies sci-kit learn’s Gaussian Mixture Modelling class.
 - Reconstruct.py transforms the results from PCA centred space back to the original, physical space (either centred or uncentred).
 
