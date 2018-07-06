@@ -91,14 +91,14 @@ def apply(address, runIndex):
 ###############################################################################    
     
 def PrincipalComponentAnalysis(address, runIndex, X_train, \
-                               n_dimen, use_fPCA, Bspline_degrees):
+                               n_dimen, use_fPCA):
     print("PCA.PrincipalComponentAnalysis")
     """ Initialises the PCA object and is called in create() """
     # initialise PCA object
     pca = decomposition.PCA(n_components = n_dimen) 
     # if use_fPCA=True, interpolate into BSpline basis   
     if use_fPCA==True:
-        X_train = convert2Bspline(depth,X_train,Bspline_degrees)
+        X_train = convert2Bspline(depth,X_train)
 
     # fit the PCA to the training data 
     pca.fit(X_train)   
@@ -120,12 +120,8 @@ print('PCA runtime = ', time.clock() - start_time,' s')
 
 ###############################################################################  
 
-def X_train_out = convert2Bspline(depth, X_train_in, Bspline_degrees):
+def convert2Bspline(depth, X_train_in):
     print('Converting to Bspline basis')
-
-    # if Bspline_degrees is large, the difference is very small
-    # for example, for Bspline_degrees=4 
-    # the difference is order 10^{-15}
 
     # fPCA applies PCA to the coefficients of the Bspline model
 
@@ -136,9 +132,11 @@ def X_train_out = convert2Bspline(depth, X_train_in, Bspline_degrees):
     for nprof in range(0,X_train_in.shape[0]):
         x = depth
         y = X_train_in[nprof,:]
-        spl = sp.interpolate.splrep(x, y)
-        y2 = sp.interpolate.splev(x, spl)
-        X_train_out[nprof,:] = y2
+        tck = sp.interpolate.splrep(x, y)
+        F = sp.interpolate.PPoly.from_spline(tck)
+        Bcoeff = F.c
+        Bknot = F.x 
+        #_train_out[nprof,:] = y2
 
     # return B-spline basis points
     return X_train_out

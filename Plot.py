@@ -54,17 +54,23 @@ def plotMapCircular(address, address_fronts, runIndex, n_comp, plotFronts=True):
     
     if plotFronts:
         SAF, SACCF, SBDY, PF = None, None, None, None
-        SAF, SACCF, SBDY, PF = loadFronts(address_fronts)     # Format is Lon col = 0 and Lat col = 1
+        SAF, SACCF, SBDY, PF = loadFronts(address_fronts)   
         
-        ax1.plot(SAF[:,0], SAF[:,1], lw = 1, ls='-', label='SAF', color='black', transform=proj_trans)
-        ax1.plot(SACCF[:,0], SACCF[:,1], lw = 1,ls='-', label='SACCF', color='green', transform=proj_trans)
-        ax1.plot(SBDY[:,0], SBDY[:,1], lw = 1,ls='-', label='SBDY', color='blue', transform=proj_trans)
-        ax1.plot(PF[:,0], PF[:,1], lw = 1,ls='-', label='PF', color='grey', transform=proj_trans)
+        ax1.plot(SAF[:,0], SAF[:,1], lw = 1, ls='-', label='SAF', \
+                 color='black', transform=proj_trans)
+        ax1.plot(SACCF[:,0], SACCF[:,1], lw = 1,ls='-', label='SACCF', \
+                 color='green', transform=proj_trans)
+        ax1.plot(SBDY[:,0], SBDY[:,1], lw = 1,ls='-', label='SBDY', \
+                 color='blue', transform=proj_trans)
+        ax1.plot(PF[:,0], PF[:,1], lw = 1,ls='-', label='PF', \
+                 color='grey', transform=proj_trans)
         
         #ax1.legend(loc='upper left')
-        ax1.legend(bbox_to_anchor=( 1.25,1.2), ncol=4, columnspacing = 0.8)
+        ax1.legend(bbox_to_anchor=( 1.25,1.2), ncol=4, \
+                   columnspacing = 0.8)
 
-    # Compute a circle in axes coordinates, which we can use as a boundary for the map.
+    # Compute a circle in axes coordinates, 
+    # which we can use as a boundary for the map.
     theta = np.linspace(0, 2*np.pi, 100)
     center = [0.5, 0.5]
     radius = 0.46   # 0.46 corresponds to roughly 30S Latitude
@@ -80,7 +86,8 @@ def plotMapCircular(address, address_fronts, runIndex, n_comp, plotFronts=True):
     
     colorbar = plt.colorbar(CS)
     colorbar.set_label('Class', rotation=270, labelpad=10)
-    plt.savefig(address+"Plots/Labels_Map_n"+str(n_comp)+".pdf",bbox_inches="tight",transparent=True)
+    plt.savefig(address+"Plots/Labels_Map_n"+str(n_comp)+\
+                ".pdf",bbox_inches="tight",transparent=True)
     plt.show()
     
 def loadFronts(address_fronts):
@@ -106,7 +113,8 @@ def plotByDynHeight(address, address_fronts, runIndex, n_comp):
     # Load the posterior probabilities for each class
     class_number_array = None
     class_number_array = np.arange(0,n_comp).reshape(-1,1)
-    lon_pp, lat_pp, dynHeight_pp, varTime_pp, post_prob = Print.readPosteriorProb(address, runIndex, class_number_array)
+    lon_pp, lat_pp, dynHeight_pp, varTime_pp, post_prob = \
+        Print.readPosteriorProb(address, runIndex, class_number_array)
  
     # plot the data in map form - individual
     colorname = 'RdYlBu'

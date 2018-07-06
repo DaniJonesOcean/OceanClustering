@@ -45,7 +45,6 @@ run_mode = "Plot"
 
 # if you want to use fPCA, set this flag to 'true'
 use_fPCA = True
-Bspline_degrees = 4
 
 # plot ACC fronts 
 plotFronts = False
@@ -121,7 +120,7 @@ def main(runIndex=None):
               run_bic=False)
 
     # loads data, selects train, cleans, centres/standardises, prints
-    PCA.create(address, runIndex, n_dimen, use_fPCA, Bspline_degrees)     
+    PCA.create(address, runIndex, n_dimen, use_fPCA)     
     GMM.create(address, runIndex, n_comp, cov_type)   
     PCA.apply(address, runIndex)                   
     GMM.apply(address, runIndex, n_comp)     
