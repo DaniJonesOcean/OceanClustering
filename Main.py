@@ -33,6 +33,7 @@ import numpy as np
 import scipy as sp
 import Load, Print, PCA, GMM, Reconstruct, Bic
 import Plot
+import pdb
 
 # start the clock (performance timing)
 start_time = time.clock()
@@ -44,7 +45,8 @@ start_time = time.clock()
 run_mode = "Plot"
 
 # if you want to use fPCA, set this flag to 'true'
-use_fPCA = True
+# THIS DOES NOT YET WORK - DO NOT USE!
+use_fPCA = False 
 
 # plot ACC fronts 
 plotFronts = False

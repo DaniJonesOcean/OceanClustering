@@ -30,12 +30,16 @@ def create(address, runIndex, n_comp, cov_type):
     col_reduced_array = np.arange(col_reduced)
     
     # Load Training data in reduced pca space
-    lon_train, lat_train, dynHeight_train, X_train_array, varTime_train = None, None, None, None, None
-    lon_train, lat_train, dynHeight_train, X_train_array, varTime_train = Print.readPCAFromFile_Train(address, runIndex, col_reduced)
+    lon_train, lat_train, dynHeight_train, X_train_array, varTime_train = \
+      None, None, None, None, None
+    lon_train, lat_train, dynHeight_train, X_train_array, varTime_train = \
+      Print.readPCAFromFile_Train(address, runIndex, col_reduced)
     
     # Calculate GMM Object
-    gmm, gmm_weights, gmm_means, gmm_covariances = None, None, None, None
-    gmm, gmm_weights, gmm_means, gmm_covariances = GaussianMixtureModel(address, runIndex, n_comp, X_train_array, cov_type)
+    gmm, gmm_weights, gmm_means, gmm_covariances = \
+      None, None, None, None
+    gmm, gmm_weights, gmm_means, gmm_covariances = \
+      GaussianMixtureModel(address, runIndex, n_comp, X_train_array, cov_type)
     
     """ Print the information on the classes to a file """
     class_number_array = np.arange(0,n_comp).reshape(-1,1)
@@ -51,7 +55,8 @@ def apply(address, runIndex, n_comp):
     
     # Load full data array - X
     lon, lat, dynHeight, X_array, varTime = None, None, None, None, None
-    lon, lat, dynHeight, X_array, varTime = Print.readPCAFromFile(address, runIndex, col_reduced)
+    lon, lat, dynHeight, X_array, varTime = Print.readPCAFromFile(address, \
+      runIndex, col_reduced)
     
     # Load GMM object
     gmm = None
@@ -66,7 +71,8 @@ def apply(address, runIndex, n_comp):
     
     # Print Labels and probabilities to file
     Print.printLabels(address, runIndex, lon, lat, dynHeight, varTime, labels)
-    Print.printPosteriorProb(address, runIndex, lon, lat, dynHeight, varTime, post_prob, class_number_array)
+    Print.printPosteriorProb(address, runIndex, lon, lat, dynHeight, \
+                             varTime, post_prob, class_number_array)
     
     
 def GaussianMixtureModel(address, runIndex, n_comp, X_train, cov_type):

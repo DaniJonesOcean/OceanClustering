@@ -84,11 +84,12 @@ def plotMapCircular(address, address_fronts, runIndex, n_comp, plotFronts=True):
 #    ax1.add_feature(cfeature.LAND)
     ax1.coastlines()
     
-    colorbar = plt.colorbar(CS)
-    colorbar.set_label('Class', rotation=270, labelpad=10)
-    plt.savefig(address+"Plots/Labels_Map_n"+str(n_comp)+\
-                ".pdf",bbox_inches="tight",transparent=True)
+#   colorbar = plt.colorbar(CS)
+#   colorbar.set_label('Class', rotation=270, labelpad=10)
+#   plt.savefig(address+"Plots/Labels_Map_n"+str(n_comp)+\
+#               ".pdf",bbox_inches="tight",transparent=True)
     plt.show()
+    
     
 def loadFronts(address_fronts):
     SAF, SACCF, SBDY, PF = None, None, None, None
