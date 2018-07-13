@@ -11,7 +11,8 @@ Input:
 Output:
     - surface mean and standard deviation class properties
        (saved as pickle file)
-    - new class indices (sorted by SST)
+    - old2new: new class indices (sorted by SST)
+    - T_mean : mean SSTs of the classes
 
 """
 
@@ -24,21 +25,22 @@ import matplotlib.pyplot as plt
 import Print
 import pickle
 
-def main(address,n_comp):
+def main(address,n_comp,labels):
+    print("ClassProperties.main()")
 
     # set paths
     floc = address + 'Data_store/CentredAndUncentred/' 
     labloc = address + 'Data_store/Labels/Labels.csv'
-    propery_store = address + 'Objects/ClassProperties.pkl'
+    property_store = address + 'Objects/ClassProperties.pkl'
 
     # find all csv files
     allFiles = glob.glob(floc + "*.csv") 
     frame = pd.DataFrame()
 
-    # read in label data
-    df0 = pd.read_csv(labloc, index_col=None, header=0)
-    df1 = df0['label']
-    labels = df1.values
+    # read in label data - now passed as an argument
+    #df0 = pd.read_csv(labloc, index_col=None, header=0)
+    #df1 = df0['label']
+    #labels = df1.values
 
     # read in T,S data. stack together with label data
     list_ = []
@@ -139,18 +141,45 @@ def main(address,n_comp):
         Time_std[kclass] = np.std(Time_arr,axis=0)
 
     # sort by temperature (these are the new class numbers)
-    newClassIndices = np.argsort(T_mean) 
-    #print(T_mean[newClassIndices])
+    old2new = np.argsort(T_mean) 
+
+    # sort the labels
+    sortedLabels = sortLabels(labels,old2new)
+
+    # use old2new to sort 
+#   lon_mean[old2new] = lon_mean
+      
+
 
     # save properties as pkl object
+    # --- use old2new for proper mapping
     with open(property_store, 'wb') as fileout:
         pickle.dump([lon_mean, lon_std, \
                      lat_mean, lat_std, \
                      dynHeight_mean, dynHeight_std, \
-                     T_mean, T_std \
-                     T_cent_mean, T_cent_std \
+                     T_mean, T_std, \
+                     T_cent_mean, T_cent_std, \
                      S_mean, S_std, \
-                     Time_mean, Time_std], fileout)             
+                     Time_mean, Time_std, \
+                     old2new, sortedLabels], fileout)             
 
     # return the new class numbers
-    return newClassIndices
+    return sortedLabels
+
+#######################################################################
+
+def sortLabels(oldLabels,old2new):
+
+    # this vector will store the sorted labels 
+    sortedLabels = np.zeros_like(oldLabels)
+    
+    # update the labels based on old2new
+    for nprofile in range(0,len(oldLabels)):
+        sortedLabels[nprofile] = old2new[int(oldLabels[nprofile])]
+
+    # shift indices by one (from python to conventional)
+    sortedLabels = sortedLabels + 1
+ 
+    return sortedLabels    
+
+

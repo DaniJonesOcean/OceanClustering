@@ -29,18 +29,31 @@ import Print
 
 start_time = time.clock()
 
-def plotMapCircular(address, address_fronts, runIndex, n_comp, plotFronts=True):
+def plotMapCircular(address, address_fronts, plotFronts, n_comp):
     print("Plot.plotMapCircular")
-    # Load lat, lon and labels
+    runIndex = None
+    # load lat, lon and labels
     lon0, lat0, dynHeight, varTime, labels = None, None, None, None, None
     lon0, lat0, dynHeight, varTime, labels = Print.readLabels(address, runIndex)
-    
-    # subselect (no more than 10 profiles per 1x1 degree box)
+  
+    # load posterior probabilities for each class
+    class_number_array = None
+    class_number_array = np.arange(0,n_comp).reshape(-1,1)
+    lon_pp,lat_pp,dynHeight_pp,varTime_pp,post_prob = \
+      Print.readPosteriorProb(address, runIndex, class_number_array)
+ 
+    # subselect
     lon = lon0
     lat = lat0
 
+    # get rid of points below posterior probability threshold
+    # THIS DOES NOT YET WORK:
+#   xplot, yplot, dplot, cplot = None, None, None, None
+#   xplot, yplot, dplot, cplot = discardWeakPoints(lon_pp,lat_pp,\
+#                                dynHeight_pp,labels,class_number_array,n_comp)
+
     # Plot the data in map form - individual
-    colorname = 'RdYlBu'
+    colorname = 'RdYlBu_r'
     colormap = plt.get_cmap(colorname,n_comp)
     
 #    proj = ccrs.Orthographic(central_longitude=0.0, central_latitude=-90.0, globe=None)
@@ -49,8 +62,8 @@ def plotMapCircular(address, address_fronts, runIndex, n_comp, plotFronts=True):
     proj_trans = ccrs.PlateCarree()
     
     ax1 = plt.axes(projection=proj)
-    CS = ax1.scatter(lon, lat, s = 0.5, lw = 0, c = labels, cmap=colormap, \
-                     vmin = -0.5, vmax = n_comp-0.5, transform = proj_trans)
+    CS = ax1.scatter(lon, lat, s = 1.0, lw = 0, c = labels, cmap=colormap, \
+                     vmin = 0.5, vmax = n_comp + 0.5, transform = proj_trans)
     
     if plotFronts:
         SAF, SACCF, SBDY, PF = None, None, None, None
@@ -84,12 +97,13 @@ def plotMapCircular(address, address_fronts, runIndex, n_comp, plotFronts=True):
 #    ax1.add_feature(cfeature.LAND)
     ax1.coastlines()
     
-#   colorbar = plt.colorbar(CS)
-#   colorbar.set_label('Class', rotation=270, labelpad=10)
+    colorbar = plt.colorbar(CS)
+    colorbar.set_label('Class', rotation=270, labelpad=10)
 #   plt.savefig(address+"Plots/Labels_Map_n"+str(n_comp)+\
 #               ".pdf",bbox_inches="tight",transparent=True)
     plt.show()
     
+#######################################################################
     
 def loadFronts(address_fronts):
     SAF, SACCF, SBDY, PF = None, None, None, None
@@ -100,8 +114,47 @@ def loadFronts(address_fronts):
     
     return SAF, SACCF, SBDY, PF
 
+#######################################################################
+
+def discardWeakPoints(lon, lat, dynHeight, labels, \
+                      class_number_array, n_comp):
+# THIS DOES NOT WORK YET
+#
+    for k in class_number_array:
+        lon_k, lat_k, dynHeight_k, post_k, indices_k = \
+          None, None, None, None, None
+        indices_k = np.where(labels == (1.0*(k+1)))
+        lon_k, lat_k = lon[indices_k], lat[indices_k]
+        post_k = post_prob[:,k][indices_k]
+ 
+        likelihood = np.zeros(len(post_k))
+        for i in range(len(post_k)):
+          if post_k[i] >= 0.99:
+            likelihood[i] = 0.99
+          elif post_k[i] >= 0.9 and post_k[i] < 0.99 :
+            likelihood[i] = 0.9
+          elif post_k[i] >= 0.66 and post_k[i] < 0.9 :
+            likelihood[i] = 0.66
+          elif post_k[i] >= 0.33 and post_k[i] < 0.66:
+            likelihood[i] = 0.33
+          elif post_k[i] >= 1/(n_comp) and post_k[i] < 0.33:
+            likelihood[i] = 1/(n_comp)
+#         else:
+#           print("WARNING: posterior value less than 1/k")
+
+        # discard all profile with post_prob less than threshold
+        keep_index = (post_prob.max(axis=1) >= 0.9)
+
+        # subselect
+        xplot = lon[keep_index]
+        yplot = lat[keep_index]
+        dplot = dynHeight[keep_index]
+        cplot = labels[keep_index] 
+
+    return xplot, yplot, dplot, cplot
+
 ###############################################################################
-###############################################################################
+
 def plotByDynHeight(address, address_fronts, runIndex, n_comp):
 
     # print function name 
@@ -138,7 +191,8 @@ def plotByDynHeight(address, address_fronts, runIndex, n_comp):
 
     plt.setp(axes, xticks=[-90, 0, 90])
     
-    plt.savefig(address+"Plots/classes_dynHeight_heatmap_95pct.pdf",bbox_inches="tight",transparent=True) 
+    plt.savefig(address+"Plots/classes_dynHeight_heatmap_95pct.pdf",\
+                bbox_inches="tight",transparent=True) 
 
     # next, plot all classes on single plot
     plt.figure(figsize=(5,5))
@@ -159,7 +213,7 @@ def plotByDynHeight(address, address_fronts, runIndex, n_comp):
     plt.savefig(address+"Plots/classes_dynHeight_single.pdf",bbox_inches="tight",transparent=True) 
 
 ###############################################################################
-###############################################################################
+
 def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=True):
     print("Plot.plotPosterior")
     # Load lat, lon and labels
@@ -169,14 +223,14 @@ def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=True):
     # Load the posterior probabilities for each class
     class_number_array = None
     class_number_array = np.arange(0,n_comp).reshape(-1,1)
-    lon_pp, lat_pp, dynHeight_pp, varTime_pp, post_prob = Print.readPosteriorProb(address, runIndex, class_number_array)
+    lon_pp, lat_pp, dynHeight_pp, varTime_pp, post_prob = \
+      Print.readPosteriorProb(address, runIndex, class_number_array)
 
     for k in class_number_array:
         lon_k, lat_k, dynHeight_k, post_k, indices_k = None, None, None, None, None
         indices_k = (np.where(labels == (1.0*k)))
         lon_k, lat_k = lon[indices_k], lat[indices_k]
         post_k = post_prob[:,k][indices_k]  
-        # Idea is to take one class, n, and select all indices_k that are actaully assigned to that class.
         likelihood = np.zeros(len(post_k))
         for i in range(len(post_k)):
             if post_k[i] >= 0.99:
@@ -191,19 +245,21 @@ def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=True):
                 print("WARNING : Posterior Value less than 1/k")
         # Plot the posterior probabilites
         #ax = plt.subplot(111, polar=True)
-        ax = plt.axes(projection = ccrs.Orthographic(central_longitude=0.0, central_latitude=-90.0, globe=None))
+        ax = plt.axes(projection = ccrs.Orthographic(central_longitude=0.0, \
+             central_latitude=-90.0, globe=None))
         colorname = 'RdYlBu'
         colormap = plt.get_cmap(colorname, 4)
         
         theta = np.pi*(lon_k)/180.0
         rho = 90 - abs(lat_k)
    
-        CS = ax.scatter(theta[::1000] ,rho[::1000], 0.5, lw = 0, c = likelihood[::50], cmap=colormap, vmin = 0, vmax = 1)
+        CS = ax.scatter(theta[::1000] ,rho[::1000], 0.5, lw = 0, \
+             c = likelihood[::50], cmap=colormap, vmin = 0, vmax = 1)
 
         # plot fronts 
         if plotFronts:
             SAF, SACCF, SBDY, PF = None, None, None, None
-            SAF, SACCF, SBDY, PF = loadFronts(address_fronts)     # Format is Lon col = 0 and Lat col = 1
+            SAF, SACCF, SBDY, PF = loadFronts(address_fronts)   
             
             theta_saf = np.pi*(SAF[:,0])/180.0
             rho_saf = 90 - abs(SAF[:,1])
@@ -231,7 +287,8 @@ def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=True):
         ax.set_yticklabels([])
         #colorbar = plt.colorbar(CS)
         #colorbar.set_label('Probability of belonging to Class', rotation=270, labelpad=10)
-        plt.savefig(address+"Plots/v2_PostProb_Class"+str(k[0])+"_n"+str(n_comp)+".pdf",bbox_inches="tight",transparent=True)
+        plt.savefig(address+"Plots/v2_PostProb_Class"+str(k[0])+\
+                    "_n"+str(n_comp)+".pdf",bbox_inches="tight",transparent=True)
         plt.show()
 
 ###############################################################################
@@ -278,8 +335,6 @@ def plotProfileClass(address, runIndex, n_comp, space):
     ax1.legend(loc='best')
     #ax1.set_title("Class Profiles with Depth in SO - "+space)
     filename = address+"Plots/Class_Profiles_"+space+"_n"+str(n_comp)+".pdf"  
-    if runIndex != None:
-        filename = address+"Plots/Class_Profiles_"+space+"_runIndex"+str(int(runIndex))+"_n"+str(n_comp)+".pdf"  
     plt.savefig(filename,bbox_inches="tight",transparent=True)
     plt.show()
 
@@ -336,13 +391,11 @@ def plotProfile(address, runIndex, space): # Uses traing profiles at the moment
     ax1.set_xlabel("Temperature /degrees")
     ax1.set_ylabel("Depth /dbar")
     filename = address+"Plots/Profiles_"+space+".pdf"  
-    if runIndex != None:
-        filename = address+"Plots/Profiles_"+space+"_runIndex"+str(int(runIndex))+".pdf"  
     plt.savefig(filename,bbox_inches="tight",transparent=True)
     plt.show()
     
 ###############################################################################
-###############################################################################
+
 def plotGaussiansIndividual(address, runIndex, n_comp, space, Nbins=1000):
     # space will be 'depth', 'reduced' or 'uncentred'
     print("Plot.plotGaussiansIndividual "+str(space))
@@ -356,7 +409,8 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, Nbins=1000):
         print("depth_array_mod.shape = ", depth_array_mod.shape)
         
         # Load X_train array and X_train_centred array
-        lon_train, lat_train, dynHeight_train, X_train, X_train_centred, varTime_train = None, None, None, None, None, None
+        lon_train, lat_train, dynHeight_train, X_train, \
+          X_train_centred, varTime_train = None, None, None, None, None, None
         lon_train, lat_train, dynHeight_train, X_train, X_train_centred, varTime_train = \
                         Print.readReconstruction(address, runIndex, depth, True)
         """
@@ -375,12 +429,13 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, Nbins=1000):
         depth_array = np.arange(col_reduced)
         depth_array_mod = depth_array
         
-        lon_train, lat_train, dynHeight_train, X_train_centred, varTime_train = None, None, None, None, None
+        lon_train, lat_train, dynHeight_train, X_train_centred, \
+          varTime_train = None, None, None, None, None
         lon_train, lat_train, dynHeight_train, X_train_centred, varTime_train = \
                         Print.readPCAFromFile_Train(address, runIndex, col_reduced)
         print("VALUE = ", X_train_centred[10,0])
     
-    # Load class properties
+    # load class properties
     gmm_weights, gmm_means, gmm_covariances = None, None, None
     gmm_weights, gmm_means, gmm_covariances = Print.readGMMclasses(address,\
                                                         runIndex, depth_array, space)
@@ -394,7 +449,7 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, Nbins=1000):
     print("Shapes: ", gmm_weights.shape, gmm_means.shape, gmm_covariances.shape)
     print("depth_array_mod.shape = ", depth_array_mod.shape)
     
-    # Define the gaussian function
+    # define the gaussian function
     def gaussianFunc(x, mu, cov):
         return (np.exp(-np.power(x - mu, 2.) / (2 * cov)))/(np.sqrt(cov*np.pi*2))
     
@@ -425,13 +480,12 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, Nbins=1000):
         
         for n in range(n_comp):
             y_gaussian = None
-#            y_gaussian = gmm_weights[n]*gaussianFunc(x_values, gmm_means[n,int(depth_array_mod[i])] , gmm_covariances[n,int(depth_array_mod[i])]) # Use if diag
-            y_gaussian = gmm_weights[n]*gaussianFunc(x_values, means_row[n] , cov_row[n]) # Use if diag
+            # use if diag
+            y_gaussian = gmm_weights[n]*gaussianFunc(x_values, means_row[n] , cov_row[n]) 
             y_total[n,:] = y_gaussian
             ax1.plot(x_values, y_gaussian, label=str(n))
         
-        
-        ax1.plot(x_values, np.sum(y_total,axis=0), lw = 2, color = 'black', label="Overall")     # Use if diag
+        ax1.plot(x_values, np.sum(y_total,axis=0), lw = 2, color = 'black', label="Overall")
         ax1.hist(X_row, bins=Nbins, normed=True, facecolor='grey', lw = 0)
         ax1.set_ylabel("Probability density")
         ax1.set_xlabel("Normalized Temperature Anomaly")
@@ -439,14 +493,22 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, Nbins=1000):
             ax1.set_xlabel("Normalized Anomaly")
         if space == 'uncentred':
             ax1.set_xlabel("Temperature /degrees")
-        ax1.set_title("GMM n = "+str(n_comp)+", "+space+" = "+str(int(depth_array[depth_array_mod[i]])))
+        ax1.set_title("GMM n = "+\
+                      str(n_comp)+\
+                      ", "+space+" = "+\
+                      str(int(depth_array[depth_array_mod[i]])))
         ax1.grid(True)
         ax1.set_xlim(xmin,xmax)
         ax1.legend(loc='best')
-        plt.savefig(address+"Plots/TrainHisto_Gaussians_n"+str(n_comp)+"_"+space+str(int((depth_array[depth_array_mod[i]])))+".pdf",bbox_inches="tight",transparent=True)
+        plt.savefig(address+\
+                    "Plots/TrainHisto_Gaussians_n"+\
+                    str(n_comp)+"_"+\
+                    space+str(int((depth_array[depth_array_mod[i]])))+\
+                    ".pdf",bbox_inches="tight",transparent=True)
         plt.show()
     
 ###############################################################################    
+
 def plotBIC(address, repeat_bic, max_groups, trend=True): 
     # Load the data and define variables first
     bic_many, bic_mean, bic_stdev, n_mean, n_stdev, n_min = None, None, None, None, None, None

@@ -20,7 +20,8 @@ start_time = time.clock()
 separator = ','
 
 ###############################################################################
-# Depth Printing
+
+# depth Printing
 def printDepth(address, runIndex, depth):
     print("Print.printDepth")
     filename = address+"Data_store/Info/Depth_retained.csv"
@@ -70,6 +71,7 @@ def readColreduced(address, runIndex):
 
     
 ###############################################################################
+
 # BIC printing and loading
 def printBIC(address, repeat_bic, bic_many, bic_mean, bic_stdev, \
              n_mean, n_stdev, n_min):
@@ -94,13 +96,13 @@ def printBIC(address, repeat_bic, bic_many, bic_mean, bic_stdev, \
     
     # This section prints the bic scores
     for r in range(repeat_bic):
-        filename = address + "Data_store/Info/BIC_r"+str(int(r))+".csv"
+        filename = address + "Data_store/Info/BIC_r"+str(int(r)).zfill(3)+".csv"
         file = open(filename,'w')
         data, columns = None, None
         columns = np.column_stack((bic_many[r,:], bic_mean, bic_stdev))
         data = columns
         writer = csv.DictWriter(file, fieldnames = \
-                 ['bic_many'+str(int(r)),'bic_mean','bic_stdev'], \
+                 ['bic_many'+str(int(r)).zfill(3),'bic_mean','bic_stdev'], \
                  delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file, delimiter=separator)
@@ -108,6 +110,8 @@ def printBIC(address, repeat_bic, bic_many, bic_mean, bic_stdev, \
             writer.writerow(line)    
         file.close()
         del filename, file
+
+#######################################################################
 
 def readBIC(address, repeat_bic):
     # reads the information on components, minimum scores and means
@@ -125,7 +129,7 @@ def readBIC(address, repeat_bic):
     head_number = 1
 
     for r in range(repeat_bic):
-        filename = address+"Data_store/Info/BIC_r"+str(int(r))+".csv"
+        filename = address+"Data_store/Info/BIC_r"+str(int(r)).zfill(3)+".csv"
         
         csvfile = np.genfromtxt(filename, delimiter=",",\
                                 skip_header=head_number)
@@ -147,7 +151,8 @@ def readBIC(address, repeat_bic):
     return bic_many, bic_mean, bic_stdev, n_mean, n_stdev, n_min
 
 ###############################################################################
-# Load Printing
+
+# load Printing
 def printLoadToFile(address, runIndex, lon, lat, dynHeight, Tint, \
                     var_centre, Sint, varTime, depth ):
     print("Print.printLoadToFile")
@@ -155,7 +160,7 @@ def printLoadToFile(address, runIndex, lon, lat, dynHeight, Tint, \
     for d in depth:
         filename = address+\
                    "Data_store/CentredAndUncentred/CentredAndUncentred_depth"+\
-                   str(int(d))+".csv"
+                   str(int(d)).zfill(3)+".csv"
 
         file = open(filename,'w')
         columns= np.column_stack((lon, lat, dynHeight, \
@@ -164,7 +169,7 @@ def printLoadToFile(address, runIndex, lon, lat, dynHeight, Tint, \
         data = columns
         writer = csv.DictWriter(file, fieldnames = \
                                ['lon','lat','dynHeight',\
-                               'Tint_'+str(int(d)),'Tint_centred',\
+                               'Tint_'+str(int(d)).zfill(3),'Tint_centred',\
                                'Sint','Time'], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file, delimiter=separator)
@@ -174,6 +179,8 @@ def printLoadToFile(address, runIndex, lon, lat, dynHeight, Tint, \
         del filename, file
         
         i = i + 1
+
+#######################################################################
         
 def printLoadToFile_Train(address, runIndex, lon_train, lat_train, \
                           dynHeight_train, Tint_train, \
@@ -184,7 +191,7 @@ def printLoadToFile_Train(address, runIndex, lon_train, lat_train, \
     for d in depth:
         filename_train = address+\
                          "Data_store/CentredAndUncentred_Train/CentredAndUncentred_Train_depth"\
-                         +str(int(d))+".csv"        
+                         +str(int(d)).zfill(3)+".csv"        
 
         file_train = open(filename_train,'w')
         columns_train = np.column_stack((lon_train, lat_train, \
@@ -194,7 +201,8 @@ def printLoadToFile_Train(address, runIndex, lon_train, lat_train, \
         data_train = columns_train
         writer = csv.DictWriter(file_train, \
                         fieldnames = ['lon_train','lat_train','dynHeight_train',\
-                                      'VAR_train_'+str(int(d)),'Var_train_centred',\
+                                      'VAR_train_'+str(int(d)).zfill(3),\
+                                      'Var_train_centred',\
                                       'Sint_train','Time_train'], \
                                        delimiter = separator)
         writer.writeheader()
@@ -205,6 +213,8 @@ def printLoadToFile_Train(address, runIndex, lon_train, lat_train, \
         del filename_train, file_train
         
         i = i + 1
+
+#######################################################################
         
 def printLoadToFile_Test(address, runIndex, lon_test, lat_test, dynHeight_test, Tint_test, \
                                 varTest_centre, Sint_test, varTime_test, depth):
@@ -213,7 +223,7 @@ def printLoadToFile_Test(address, runIndex, lon_test, lat_test, dynHeight_test, 
     for d in depth:
         filename_test = address+\
            "Data_store/CentredAndUncentred_Test/CentredAndUncentred_Test_depth"+\
-           str(int(d))+".csv"        
+           str(int(d)).zfill(3)+".csv"        
 
         file_test = open(filename_test,'w')
         columns_test = np.column_stack((lon_test, lat_test, \
@@ -222,7 +232,7 @@ def printLoadToFile_Test(address, runIndex, lon_test, lat_test, dynHeight_test, 
         data_test = columns_test
         writer = csv.DictWriter(file_test, \
                       fieldnames = ['lon_test','lat_test',\
-                      'dynHeight_test','VAR_test_'+str(int(d)),\
+                      'dynHeight_test','VAR_test_'+str(int(d)).zfill(3),\
                       'Var_test_centred','Sint_test','Time_test'], \
                       delimiter = separator)
         writer.writeheader()
@@ -234,6 +244,8 @@ def printLoadToFile_Test(address, runIndex, lon_test, lat_test, dynHeight_test, 
         
         i = i + 1
     
+#######################################################################
+
 def readLoadFromFile(address, runIndex, depth):
     print("Print.readLoadFromFile")
     lon, lat, dynHeight, Tint, var, Sint, varTime = \
@@ -244,7 +256,7 @@ def readLoadFromFile(address, runIndex, depth):
 #        print(i)
         filename = address+\
            "Data_store/CentredAndUncentred/CentredAndUncentred_depth"+\
-           str(int(d))+".csv"
+           str(int(d)).zfill(3)+".csv"
         
         csvfile = np.genfromtxt(filename, delimiter=",",\
                       skip_header=head_number)
@@ -274,6 +286,8 @@ def readLoadFromFile(address, runIndex, depth):
 
     return lon, lat, dynHeight, Tint_array, X_array, Sint_array, varTime
 
+#######################################################################
+
 def readLoadFromFile_Train(address, runIndex, depth):
     print("Print.readLoadFromFile_Train")
     lon_train, lat_train, dynHeight_train, Tint_train, varTrain, \
@@ -284,7 +298,7 @@ def readLoadFromFile_Train(address, runIndex, depth):
 #        print(i)
         filename_train = address+\
             "Data_store/CentredAndUncentred_Train/CentredAndUncentred_Train_depth"+\
-            str(int(d))+".csv"
+            str(int(d)).zfill(3)+".csv"
 
         csvfile_train = np.genfromtxt(filename_train, delimiter=",",\
                         skip_header=head_number)
@@ -316,6 +330,8 @@ def readLoadFromFile_Train(address, runIndex, depth):
     return lon_train, lat_train, dynHeight_train, Tint_train_array, X_train_array, \
             Sint_train_array, varTime_train
             
+#######################################################################
+
 def readLoadFromFile_Test(address, runIndex, depth):
     print("Print.readLoadFromFile_Test")
     lon_test, lat_test, dynHeight_test, Tint_test, varTest, \
@@ -326,7 +342,7 @@ def readLoadFromFile_Test(address, runIndex, depth):
 #        print(i)
         filename_test = address+\
            "Data_store/CentredAndUncentred_Test/CentredAndUncentred_Test_depth"+\
-           str(int(d))+".csv"
+           str(int(d)).zfill(3)+".csv"
 
         csvfile_test = np.genfromtxt(filename_test, delimiter=",",\
                        skip_header=head_number)
@@ -359,8 +375,10 @@ def readLoadFromFile_Test(address, runIndex, depth):
             Sint_test_array, varTime_test
 
 ###############################################################################
+
 # PCA Printing
-def printPCAToFile(address, runIndex, lon, lat, dynHeight, X_pca, varTime, col_reduced):
+def printPCAToFile(address, runIndex, lon, lat, dynHeight, \
+                   X_pca, varTime, col_reduced):
     print("Print.printPCAToFile")
     for d in range(col_reduced):
         filename = address+"Data_store/PCA/PCA_reddepth"+str(d)+".csv"        
@@ -370,13 +388,15 @@ def printPCAToFile(address, runIndex, lon, lat, dynHeight, X_pca, varTime, col_r
         data = columns
         writer = csv.DictWriter(file, \
             fieldnames = ['lon','lat','dynHeight','VAR_'+\
-            str(int(d)),'Time'], delimiter = separator)
+            str(int(d)).zfill(3),'Time'], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file, delimiter=separator)    
         for line in data:
             writer.writerow(line)
         file.close() 
         del filename, file
+
+#######################################################################
 
 def printPCAToFile_Train(address, runIndex, lon_train, lat_train, dynHeight_train, \
                                 X_pca_train, varTime_train, col_reduced):
@@ -392,7 +412,7 @@ def printPCAToFile_Train(address, runIndex, lon_train, lat_train, dynHeight_trai
         data_train = columns_train
         writer = csv.DictWriter(file_train, fieldnames = \
             ['lon_train','lat_train','dynHeight_train','VAR_train_'+\
-            str(int(d)),'Time_train'], delimiter = separator)
+            str(int(d)).zfill(3),'Time_train'], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file_train, delimiter=separator)    
         for line in data_train:
@@ -400,12 +420,14 @@ def printPCAToFile_Train(address, runIndex, lon_train, lat_train, dynHeight_trai
         file_train.close() 
         del filename_train, file_train
 
+#######################################################################
+
 def readPCAFromFile(address, runIndex, col_reduced):
     print("Print.readPCAFromFile")
     lon, lat, dynHeight, var, varTime= None, None, None, None, None
     head_number = 1
     for d in range(col_reduced):
-        filename = address+"Data_store/PCA/PCA_reddepth"+str(int(d))+".csv"
+        filename = address+"Data_store/PCA/PCA_reddepth"+str(int(d)).zfill(3)+".csv"
 
         csvfile = np.genfromtxt(filename, delimiter=",",skip_header=head_number)
         
@@ -426,15 +448,22 @@ def readPCAFromFile(address, runIndex, col_reduced):
 #    print(lon.shape,lat.shape,varTime.shape)
     
     return lon, lat, dynHeight, X_array, varTime
+
+#######################################################################
         
 def readPCAFromFile_Train(address, runIndex, col_reduced):
     print("Print.readPCAFromFile_Train")
-    lon_train, lat_train, dynHeight_train, varTrain, varTime_train = None, None, None, None, None
+    lon_train, lat_train, dynHeight_train, varTrain, varTime_train = \
+      None, None, None, None, None
+
     head_number = 1
     for d in range(col_reduced):
-        filename_train = address+"Data_store/PCA_Train/PCA_Train_reddepth"+str(int(d))+".csv"
+        filename_train = address+\
+                         "Data_store/PCA_Train/PCA_Train_reddepth"+\
+                         str(int(d)).zfill(3)+".csv"
 
-        csvfile_train = np.genfromtxt(filename_train, delimiter=",",skip_header=head_number)
+        csvfile_train = np.genfromtxt(filename_train, \
+                        delimiter=",",skip_header=head_number)
         
         if d == 0:
             lon_train     = csvfile_train[:,0]
@@ -455,6 +484,7 @@ def readPCAFromFile_Train(address, runIndex, col_reduced):
     return lon_train, lat_train, dynHeight_train, X_train_array, varTime_train
 
 ###############################################################################
+
 def printGMMclasses(address, runIndex, class_number_array, gmm_weights, gmm_means,\
                     gmm_covariances, depth_array, space):
     print("Print.printGMMclasses "+space)
@@ -462,14 +492,19 @@ def printGMMclasses(address, runIndex, class_number_array, gmm_weights, gmm_mean
     # depth_number is either col_reduced or len(depth)
     i = 0
     for d in depth_array:
-        filename_train = address+"Data_store/GMM_classes_"+space+"/GMM_classes_"+space+str(int(d))+".csv"        
-        if runIndex != None:
-            filename_train = address+"Data_store/GMM_classes_"+space+"/GMM_classes_"+space+str(int(d))+"_run"+str(int(runIndex))+".csv"        
+        filename_train = address+\
+            "Data_store/GMM_classes_"+\
+             space+"/GMM_classes_"\
+             +space+str(int(d).zfill(3))+".csv"        
 
         file_train = open(filename_train,'w')
-        columns_train = np.column_stack((class_number_array, gmm_weights, gmm_means[:,i], gmm_covariances[:,i]))
+        columns_train = np.column_stack((class_number_array, \
+                            gmm_weights, gmm_means[:,i], gmm_covariances[:,i]))
         data_train = columns_train
-        writer = csv.DictWriter(file_train, fieldnames = ['Class','Weights','Means_'+str(int(d)),'Covariances_'+str(int(d))], delimiter = separator)
+        writer = csv.DictWriter(file_train, \
+            fieldnames = ['Class','Weights','Means_'+\
+                          str(int(d)).zfill(3),'Covariances_'+\
+                          str(int(d)).zfill(3)], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file_train, delimiter=separator)    
         for line in data_train:
@@ -477,6 +512,8 @@ def printGMMclasses(address, runIndex, class_number_array, gmm_weights, gmm_mean
         file_train.close() 
         del filename_train, file_train
         i = i + 1
+
+#######################################################################
         
 def readGMMclasses(address, runIndex, depth_array, space):
     print("Print.readGMMclasses "+space)
@@ -486,11 +523,11 @@ def readGMMclasses(address, runIndex, depth_array, space):
     head_number = 1
     i = 0
     for d in depth_array:
-        filename_train = address+"Data_store/GMM_classes_"+space+"/GMM_classes_"+space+str(int(d))+".csv"        
-        if runIndex != None:
-            filename_train = address+"Data_store/GMM_classes_"+space+"/GMM_classes_"+space+str(int(d))+"_run"+str(int(runIndex))+".csv"     
+        filename_train = address+"Data_store/GMM_classes_"+\
+                         space+"/GMM_classes_"+space+str(int(d)).zfill(3)+".csv"        
 
-        csvfile_train = np.genfromtxt(filename_train, delimiter=",",skip_header=head_number)
+        csvfile_train = np.genfromtxt(filename_train, \
+                        delimiter=",",skip_header=head_number)
         
         if i == 0:
             gmm_weights     = csvfile_train[:,1]
@@ -513,33 +550,32 @@ def readGMMclasses(address, runIndex, depth_array, space):
     
     return gmm_weights, gmm_means, gmm_covariances
 
-###############################################################################
+########################################################################
+
 def printLabels(address, runIndex, lon, lat, dynHeight, varTime, labels):
     print("Print.printLabels")
     filename = address+"Data_store/Labels/Labels.csv"
-    if runIndex != None:
-        filename = address+"Data_store/Labels/Labels_run"+str(runIndex)+".csv"        
 
     file = open(filename,'w')
     columns = np.column_stack(( lon, lat, dynHeight, varTime, labels ))
     data = columns
-    writer = csv.DictWriter(file, fieldnames = ['lon','lat','dynHeight','varTime','label'], delimiter = separator)
+    writer = csv.DictWriter(file, fieldnames = \
+             ['lon','lat','dynHeight','varTime','label'], delimiter = separator)
     writer.writeheader()
     writer = csv.writer(file, delimiter=separator)    
     for line in data:
         writer.writerow(line)
     file.close() 
     del filename, file
+
+#######################################################################
     
 def readLabels(address,runIndex):
     print("Print.readLabels")
     head_number = 1
     filename = address+"Data_store/Labels/Labels.csv"
-    if runIndex != None:
-        filename = address+"Data_store/Labels/Labels_run"+str(runIndex)+".csv"
         
     csvfile = np.genfromtxt(filename, delimiter=",",skip_header=head_number)
-    
     lon, lat, dynHeight, varTime, labels = None, None, None, None, None
     
     lon = csvfile[:,0]
@@ -552,15 +588,19 @@ def readLabels(address,runIndex):
 
 ###############################################################################
     
-def printPosteriorProb(address, runIndex, lon, lat, dynHeight, varTime, post_prob, class_number_array):
+def printPosteriorProb(address, runIndex, lon, lat, dynHeight, \
+                       varTime, post_prob, class_number_array):
     print("Print.printPosteriorProb")
     i = 0
     for class_number in class_number_array:
-        filename = address+"Data_store/Probabilities/Post_prob_class"+str(class_number)+".csv"
+        filename = address+"Data_store/Probabilities/Post_prob_class"\
+                          +str(class_number)+".csv"
         file = open(filename,'w')
         columns = np.column_stack(( lon, lat, dynHeight, varTime, post_prob[:,i] ))
         data = columns
-        writer = csv.DictWriter(file, fieldnames = ['lon','lat','dynHeight','varTime','post_prob_class_'+str(class_number)], delimiter = separator)
+        writer = csv.DictWriter(file, fieldnames = \
+                 ['lon','lat','dynHeight','varTime','post_prob_class_'+\
+                 str(class_number)], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file, delimiter=separator)    
         for line in data:
@@ -568,49 +608,59 @@ def printPosteriorProb(address, runIndex, lon, lat, dynHeight, varTime, post_pro
         file.close() 
         del filename, file
         i = i + 1
+
+#######################################################################
         
 def readPosteriorProb(address,runIndex,class_number_array):
     print("Print.readPosteriorProb")
     head_number = 1
-    i = 0
     post_prob = None
     for class_number in class_number_array:
-        filename = address+"Data_store/Probabilities/Post_prob_class"+str(class_number)+".csv"
+        filename = address+\
+                   "Data_store/Probabilities/Post_prob_class"+\
+                   str(class_number)+".csv"
 
-        csvfile = np.genfromtxt(filename, delimiter=",",skip_header=head_number)
+        csvfile = np.genfromtxt(filename, delimiter=",",\
+                                skip_header=head_number)
         
-        lon, lat, dynHeight, varTime, post_prob_i = None, None, None, None, None
-        
-        if i == 0:
-            lon = csvfile[:,0]
-            lat = csvfile[:,1]
-            dynHeight = csvfile[:,2]
-            varTime = csvfile[:,3]
-        
+        #lon, lat, dynHeight, varTime, post_prob_i = \
+        # None, None, None, None, None
+       
+        # grab values from csvfile 
+        lon = csvfile[:,0]
+        lat = csvfile[:,1]
+        dynHeight = csvfile[:,2]
+        varTime = csvfile[:,3]
         post_prob_i = csvfile[:,4]
 
-        if i == 0:
+        if class_number == 0:
             post_prob  = post_prob_i.reshape(post_prob_i.size,1)
         else:            
             post_prob_i = post_prob_i.reshape(post_prob_i.size,1)
             post_prob = np.hstack([post_prob, post_prob_i])
-        i = i + 1
     
     return lon, lat, dynHeight, varTime, post_prob
         
 ###############################################################################
-def printReconstruction(address, runIndex, lon, lat, dynHeight, X, XC, varTime, depth, isTrain):
+
+def printReconstruction(address, runIndex, lon, lat, dynHeight, X, XC, \
+                        varTime, depth, isTrain):
     print("Print.printReconstruction isTrain = "+str(isTrain))
     # isTrain is True or False
     i = 0
     for d in depth:
-        filename = address+"Data_store/Reconstruction/Recon_depth"+str(int(d))+".csv"
+        filename = address+"Data_store/Reconstruction/Recon_depth"+\
+                   str(int(d)).zfill(3)+".csv"
         if isTrain:
-            filename = address+"Data_store/Reconstruction_Train/Recon_Train_depth"+str(int(d))+".csv"
+            filename = address+"Data_store/Reconstruction_Train/Recon_Train_depth"+\
+                   str(int(d)).zfill(3)+".csv"
         file = open(filename,'w')
         columns = np.column_stack(( lon, lat, dynHeight, X[:,i], XC[:,i], varTime ))
         data = columns
-        writer = csv.DictWriter(file, fieldnames = ['lon','lat','dynHeight','X_'+str(int(d)), 'X_centred', 'varTime'], delimiter = separator)
+        writer = csv.DictWriter(file, \
+                 fieldnames = ['lon','lat','dynHeight',\
+                               'X_'+str(int(d)).zfill(3), 'X_centred', \
+                               'varTime'], delimiter = separator)
         writer.writeheader()
         writer = csv.writer(file, delimiter=separator)    
         for line in data:
@@ -619,6 +669,8 @@ def printReconstruction(address, runIndex, lon, lat, dynHeight, X, XC, varTime, 
         del filename, file
         i = i + 1
         
+#######################################################################
+
 def readReconstruction(address, runIndex, depth, isTrain):
     print("Print.readReconstruction isTrain = "+str(isTrain))
     # Function reads the Reconstructed XR, XRC, XR_Train, XRC_Train
@@ -626,9 +678,13 @@ def readReconstruction(address, runIndex, depth, isTrain):
     i = 0
     for d in depth:
         
-        filename = address+"Data_store/Reconstruction/Recon_depth"+str(int(d))+".csv"
+        filename = address+\
+                   "Data_store/Reconstruction/Recon_depth"+\
+                   str(int(d)).zfill(3)+".csv"
         if isTrain:
-            filename = address+"Data_store/Reconstruction_Train/Recon_Train_depth"+str(int(d))+".csv"
+            filename = address+\
+                       "Data_store/Reconstruction_Train/Recon_Train_depth"+\
+                       str(int(d)).zfill(3)+".csv"
 
         csvfile = np.genfromtxt(filename, delimiter=",",skip_header=head_number)
         if i == 0:

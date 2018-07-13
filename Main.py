@@ -32,6 +32,7 @@ import time
 import numpy as np
 import scipy as sp
 import Load, Print, PCA, GMM, Reconstruct, Bic
+import ClassProperties
 import Plot
 import pdb
 
@@ -43,13 +44,14 @@ start_time = time.clock()
 # -- GMM = performs GMM procedure (no BIC, no plots)
 # -- Plot = plots the results (located in address+ploc)
 run_mode = "Plot"
+print("Running in mode: "+run_mode)
 
 # if you want to use fPCA, set this flag to 'true'
 # THIS DOES NOT YET WORK - DO NOT USE!
 use_fPCA = False 
 
 # plot ACC fronts 
-plotFronts = False
+plotFronts = True
 
 # set parameters
 n_comp = 8           # number of classes in GMM object
@@ -105,7 +107,6 @@ fraction_nan_depths = 32.0
 """ end of initialisation conditions """
 
 ###############################################################################
-###############################################################################
 
 """ Program """
 def main(runIndex=None):
@@ -131,20 +132,24 @@ def main(runIndex=None):
     Reconstruct.gmm_reconstruct(address, runIndex, n_comp)  
     Reconstruct.full_reconstruct(address, runIndex)
     Reconstruct.train_reconstruct(address, runIndex)
-    
+
+#######################################################################
+
 # function that only carries out plotting 
 def mainPlot(address, address_fronts, runIndex, n_comp, plotFronts):
-    Plot.plotMapCircular(address, address_fronts, runIndex, n_comp)
+    Plot.plotMapCircular(address, address_fronts, plotFronts, n_comp)
 #   Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp)
-    Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=False)
-    Plot.plotProfileClass(address, runIndex, n_comp, 'uncentred')
-    Plot.plotProfileClass(address, runIndex, n_comp, 'depth')
-    Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced')
-    Plot.plotProfile(address, runIndex, 'original')
-    Plot.plotProfile(address, runIndex, 'uncentred')
-    Plot.plotWeights(address, runIndex)
+#   Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=False)
+#   Plot.plotProfileClass(address, runIndex, n_comp, 'uncentred')
+#   Plot.plotProfileClass(address, runIndex, n_comp, 'depth')
+#   Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced')
+#   Plot.plotProfile(address, runIndex, 'original')
+#   Plot.plotProfile(address, runIndex, 'uncentred')
+#   Plot.plotWeights(address, runIndex)
 
-""" If the required directory structure does not exist, create it """
+#######################################################################
+
+# If the required directory structure does not exist, create it 
 def makeDirectoryStructure(address):
     import os
     # make Data_store

@@ -16,7 +16,7 @@ import pickle
 from sklearn import mixture
 import numpy as np
 import time
-
+import ClassProperties
 import Print
 
 start_time = time.clock()
@@ -58,40 +58,53 @@ def apply(address, runIndex, n_comp):
     lon, lat, dynHeight, X_array, varTime = Print.readPCAFromFile(address, \
       runIndex, col_reduced)
     
-    # Load GMM object
+    # load GMM object
     gmm = None
     with open(address+'Objects/GMM_Object.pkl', 'rb') as input:
         gmm = pickle.load(input)
     
-    # Calculate the labels and probabilities of the profiles
-    labels, post_prob = None, None
-    labels = gmm.predict(X_array)  # Expected shaope (n_profiles,)
-    post_prob = gmm.predict_proba(X_array) # Expected shape (n_profiles, classes)
+    # calculate the labels and probabilities of the profiles
+    sortedLabels, labels, post_prob = None, None, None
+
+    # predict classes based on training dataset, output labels
+    labels = gmm.predict(X_array)  # expected shape (n_profiles,)
+
+    # sort labels by mean SST of each class
+    sortedLabels = ClassProperties.main(address,n_comp,labels) 
+   
+    # calculate posterior probabilities
+    post_prob = gmm.predict_proba(X_array) # expected shape (n_profiles, classes)
+
+    # needed for input of printPosteriorProb
     class_number_array = np.arange(0,n_comp).reshape(-1,1)
     
     # Print Labels and probabilities to file
-    Print.printLabels(address, runIndex, lon, lat, dynHeight, varTime, labels)
+    Print.printLabels(address, runIndex, lon, lat, dynHeight, varTime, sortedLabels)
     Print.printPosteriorProb(address, runIndex, lon, lat, dynHeight, \
                              varTime, post_prob, class_number_array)
-    
     
 def GaussianMixtureModel(address, runIndex, n_comp, X_train, cov_type):
     print("GMM.GaussianMixtureModel")
     gmm = None
-    gmm = mixture.GaussianMixture(n_components = n_comp, covariance_type = cov_type)
-#    gmm = mixture.BayesianGaussianMixture(n_components = n_comp, covariance_type = cov_type)
+    gmm = mixture.GaussianMixture(n_components = n_comp, \
+                                  covariance_type = cov_type)
+#    gmm = mixture.BayesianGaussianMixture(n_components = n_comp, \
+#                                          covariance_type = cov_type)
+
+    # use training dataset to "fit" Gaussian mixture model
     gmm.fit(X_train)
     
-    #### Attempt to store the GMM object
+    # store the GMM object
     gmm_store = address+"Objects/GMM_Object.pkl"
     with open(gmm_store, 'wb') as output:
         gmmObject = gmm
         pickle.dump(gmmObject, output, pickle.HIGHEST_PROTOCOL)
     del gmmObject
     
+    # means and covariances
     weights, means, covariances = None, None, None
     weights = np.squeeze(gmm.weights_)  # shape (n_components)
-    # NOTE: weights is the same for each col_red
+    # note: "weights" is the same for each col_red
     means = np.squeeze(gmm.means_)  # shape (n_components, n_features)
     covariances = abs(np.squeeze(gmm.covariances_))  # shape (n_components, n_features) 
     
