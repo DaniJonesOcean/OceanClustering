@@ -9,10 +9,9 @@ Input:
     address = root location
     n_comp = number of classes/components in GMM
 Output:
-    - surface mean and standard deviation class properties
+    - data frame with everything, including SST sorted labels
        (saved as pickle file)
     - old2new: new class indices (sorted by SST)
-    - T_mean : mean SSTs of the classes
 
 """
 
@@ -25,22 +24,31 @@ import matplotlib.pyplot as plt
 import Print
 import pickle
 
-def main(address,n_comp,labels):
+def main(address, runIndex, n_comp):
     print("ClassProperties.main()")
 
     # set paths
     floc = address + 'Data_store/CentredAndUncentred/' 
-    labloc = address + 'Data_store/Labels/Labels.csv'
-    property_store = address + 'Objects/ClassProperties.pkl'
+    labloc_unsorted = address + 'Data_store/Labels/Labels_unsorted.csv'
+    frame_store = address + 'Objects/AllProfiles.pkl'
 
     # find all csv files
     allFiles = glob.glob(floc + "*.csv") 
     frame = pd.DataFrame()
 
     # read in label data - now passed as an argument
-    #df0 = pd.read_csv(labloc, index_col=None, header=0)
-    #df1 = df0['label']
-    #labels = df1.values
+    df0 = pd.read_csv(labloc_unsorted, index_col=None, header=0)
+    df1 = df0['label']
+    labels = df1.values
+
+    # read depth levels
+    depths_retained = Print.readDepth(address, runIndex)
+
+    # load posterior probabilities for each class
+    class_number_array = None
+    class_number_array = np.arange(0,n_comp).reshape(-1,1)
+    lon_pp,lat_pp,dynHeight_pp,varTime_pp,post_prob = \
+    Print.readPosteriorProb(address, runIndex, class_number_array)
 
     # read in T,S data. stack together with label data
     list_ = []
@@ -49,122 +57,65 @@ def main(address,n_comp,labels):
         c = np.column_stack((df.values,labels))
         list_.append(c)
 
-    # stack depths as new dimension
-    # shape is (profile number, variable, depth)
+    # stack depths as new dimension / shape is (profile number, variable, depth)
     # where variables are lon lat dynHeight Tint Tint_centred Sint Time Label
     allOne = np.dstack(list_)
     numberOfProfiles, numberOfVars, numberOfDepths = allOne.shape
 
-    # make a list of dictionaries, with array entries
-    profiles_list = []
-    for nprof in range(0,numberOfProfiles-1):
-        A = {'lon':allOne[nprof,0,0], \
-             'lat' : allOne[nprof,1,0], \
-             'dynHeight' : allOne[nprof,2,0], \
-             'T' : allOne[nprof,3,:], \
-             'T_cent' : allOne[nprof,4,:], \
-             'S' : allOne[nprof,5,:], \
-             'Time' : allOne[nprof,6,0], \
-             'class' : allOne[nprof,7,0] }
-        # append dictionary to list
-        profiles_list.append(A)
+    # make a pandas dataframe that can be easily split
+    print('ClassProperties.main() : creating data frame (this may take a while)')
+    d = []
+    for i in range(0,numberOfProfiles):
+        for k in range(0,numberOfDepths):
+            d.append({'profile_index': i, 
+                      'depth_index': k,
+                      'longitude': allOne[i,0,k],
+                      'latitude': allOne[i,1,k],
+                      'pressure': depths_retained[k],
+                      'dynamic_height': allOne[i,2,k],
+                      'temperature': allOne[i,3,k],
+                      'temperature_standardized': allOne[i,4,k],
+                      'salinity': allOne[i,5,k],
+                      'time': allOne[i,6,k],
+                      'class': int(allOne[i,7,k]),
+                      'posterior_probability': np.max(post_prob[i,:])})
+    allDF = pd.DataFrame(d)        
 
-    # declare empty dictionary
-    lon_by_class = {}
-    lat_by_class = {}
-    dynHeight_by_class = {}
-    T_by_class = {}
-    T_cent_by_class = {}
-    S_by_class = {}
-    Time_by_class = {}
-    # add new keys to dictionary 
-    for kclass in range(0,n_comp):
-        lon_by_class[kclass] = []
-        lat_by_class[kclass] = []
-        dynHeight_by_class[kclass] = []
-        T_by_class[kclass] = []
-        T_cent_by_class[kclass] = []
-        S_by_class[kclass] = []
-        Time_by_class[kclass] = []
+    # clear some memory by getting rid of variables
+    del allOne
+    del post_prob
 
-    for kclass in range(0,n_comp):
-        for item in [i for i in range(0,numberOfProfiles-1) \
-                     if profiles_list[i]['class']==kclass]:
-            # each list entry is a vector
-            lon_by_class[kclass].append(profiles_list[item]['lon'])
-            lat_by_class[kclass].append(profiles_list[item]['lat'])
-            dynHeight_by_class[kclass].append(profiles_list[item]['dynHeight'])
-            T_by_class[kclass].append(profiles_list[item]['T'])
-            T_cent_by_class[kclass].append(profiles_list[item]['T_cent'])
-            S_by_class[kclass].append(profiles_list[item]['S'])
-            Time_by_class[kclass].append(profiles_list[item]['Time'])
-	
-    lon_mean = np.zeros(n_comp)
-    lat_mean = np.zeros(n_comp)
-    dynHeight_mean = np.zeros(n_comp)
-    T_mean = np.zeros(n_comp)
-    T_cent_mean = np.zeros(n_comp)
-    S_mean = np.zeros(n_comp)
-    Time_mean = np.zeros(n_comp)
-    lon_std = np.zeros(n_comp)
-    lat_std = np.zeros(n_comp)
-    dynHeight_std = np.zeros(n_comp)
-    T_std = np.zeros(n_comp)
-    T_cent_std = np.zeros(n_comp)
-    S_std = np.zeros(n_comp)
-    Time_std = np.zeros(n_comp)
+    # read the pickle file data frame (for testing only)
+#   allDF = pd.read_pickle(frame_store, compression='infer')
 
-    # just some properties
-    for kclass in range(0,n_comp):
-        # format as ndarrays
-        lon_arr = np.asarray(lon_by_class[kclass])
-        lat_arr = np.asarray(lat_by_class[kclass])
-        dynHeight_arr = np.asarray(dynHeight_by_class[kclass])
-        T_arr = np.asarray(T_by_class[kclass])
-        T_cent_arr = np.asarray(T_cent_by_class[kclass])
-        S_arr = np.asarray(S_by_class[kclass])
-        Time_arr = np.asarray(Time_by_class[kclass])
-        # nanmeans and standard deviations
-        lon_mean[kclass] = np.nanmean(lon_arr,axis=0)
-        lon_std[kclass] = np.std(lon_arr,axis=0)
-        lat_mean[kclass] = np.nanmean(lat_arr,axis=0)
-        lat_std[kclass] = np.std(lat_arr,axis=0)
-        dynHeight_mean[kclass] = np.nanmean(dynHeight_arr,axis=0)
-        dynHeight_std[kclass] = np.std(dynHeight_arr,axis=0)
-        T_mean[kclass] = np.nanmean(T_arr[:,0],axis=0)
-        T_std[kclass] = np.std(T_arr[:,0],axis=0)
-        T_cent_mean[kclass] = np.nanmean(T_cent_arr[:,0],axis=0)
-        T_cent_std[kclass] = np.std(T_cent_arr[:,0],axis=0)
-        S_mean[kclass] = np.nanmean(S_arr[:,0],axis=0)
-        S_std[kclass] = np.std(S_arr[:,0],axis=0)
-        Time_mean[kclass] = np.nanmean(Time_arr,axis=0)
-        Time_std[kclass] = np.std(Time_arr,axis=0)
+    # surface only
+    surfaceDF = allDF[allDF.pressure == 15]
+    surfaceDFg = surfaceDF.groupby(['class'])
+
+    # sea surface properties
+    SST_medians = surfaceDFg['temperature'].median()
 
     # sort by temperature (these are the new class numbers)
-    old2new = np.argsort(T_mean) 
+    old2new = np.argsort(SST_medians.values) 
 
-    # sort the labels
-    sortedLabels = sortLabels(labels,old2new)
+    # construct dictionary to replace old class numbers with new ones
+    di = dict(zip(range(0,n_comp),old2new))
 
-    # use old2new to sort 
-#   lon_mean[old2new] = lon_mean
-      
+    # add sorted class numbers as a new column
+    allDF['class_sorted']=allDF['class'].map(di)
 
+    # save allDF pickle object for later use
+    print('ClassProperties.main(): pickling data frame')
+    allDF.to_pickle(frame_store, compression='infer')
 
-    # save properties as pkl object
-    # --- use old2new for proper mapping
-    with open(property_store, 'wb') as fileout:
-        pickle.dump([lon_mean, lon_std, \
-                     lat_mean, lat_std, \
-                     dynHeight_mean, dynHeight_std, \
-                     T_mean, T_std, \
-                     T_cent_mean, T_cent_std, \
-                     S_mean, S_std, \
-                     Time_mean, Time_std, \
-                     old2new, sortedLabels], fileout)             
+    # write some summaries to csv
+    for column in allDF:
+        fname = address + 'Results/' + column + '_stats.csv'
+        tmp = allDFg[column].describe()
+        tmp.to_csv(fname)
 
-    # return the new class numbers
-    return sortedLabels
+    # return the new data frame
+#   return allDF, old2new
 
 #######################################################################
 
@@ -177,9 +128,11 @@ def sortLabels(oldLabels,old2new):
     for nprofile in range(0,len(oldLabels)):
         sortedLabels[nprofile] = old2new[int(oldLabels[nprofile])]
 
+    # let's keep python indexing right up until plotting
     # shift indices by one (from python to conventional)
-    sortedLabels = sortedLabels + 1
+    # sortedLabels = sortedLabels + 1
  
     return sortedLabels    
 
+#######################################################################
 

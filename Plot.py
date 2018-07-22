@@ -14,75 +14,77 @@ Purpose:
 
 """
 import numpy as np
-import time
 import matplotlib as mpl
 import matplotlib.path as mpath
 import matplotlib.pyplot as plt
-import pickle
 from scipy.optimize import curve_fit
+import pickle
+import pdb
 
 import cartopy
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
 import Print
+import time
 
 start_time = time.clock()
 
-def plotMapCircular(address, address_fronts, plotFronts, n_comp):
+def plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF):
     print("Plot.plotMapCircular")
     runIndex = None
-    # load lat, lon and labels
-    lon0, lat0, dynHeight, varTime, labels = None, None, None, None, None
-    lon0, lat0, dynHeight, varTime, labels = Print.readLabels(address, runIndex)
-  
-    # load posterior probabilities for each class
-    class_number_array = None
-    class_number_array = np.arange(0,n_comp).reshape(-1,1)
-    lon_pp,lat_pp,dynHeight_pp,varTime_pp,post_prob = \
-      Print.readPosteriorProb(address, runIndex, class_number_array)
- 
-    # subselect
-    lon = lon0
-    lat = lat0
 
-    # get rid of points below posterior probability threshold
-    # THIS DOES NOT YET WORK:
-#   xplot, yplot, dplot, cplot = None, None, None, None
-#   xplot, yplot, dplot, cplot = discardWeakPoints(lon_pp,lat_pp,\
-#                                dynHeight_pp,labels,class_number_array,n_comp)
+    # set plotting thresholds
+    threshold = 0.90
+    pskip = 10
 
-    # Plot the data in map form - individual
-    colorname = 'RdYlBu_r'
+    # select colormap (qualitative)
+    colorname = 'Pastel1'
     colormap = plt.get_cmap(colorname,n_comp)
-    
-#    proj = ccrs.Orthographic(central_longitude=0.0, central_latitude=-90.0, globe=None)
+
+    # next - add ability to discard low pp values 
+
+    # select x, y, and color data    
+    surfaceDF = allDF[allDF.pressure == 15]
+    xplot = surfaceDF['longitude'].values
+    yplot = surfaceDF['latitude'].values
+    cplot = surfaceDF['class'].values
+
+    # subselect
+    xplot = xplot[::pskip]
+    yplot = yplot[::pskip]
+    cplot = cplot[::pskip]
+
+    # select map and projection
     proj = ccrs.SouthPolarStereo()
-#   proj = ccrs.Mollweide()
     proj_trans = ccrs.PlateCarree()
     
+    # create plot axes
     ax1 = plt.axes(projection=proj)
-    CS = ax1.scatter(lon, lat, s = 1.0, lw = 0, c = labels, cmap=colormap, \
-                     vmin = 0.5, vmax = n_comp + 0.5, transform = proj_trans)
+
+    # create scatter plot 
+    CS = ax1.scatter(xplot, yplot, s = 2.0, lw = 0, c = cplot, \
+                     cmap=colormap, vmin = 0.5, vmax = n_comp + 0.5, transform = proj_trans)
     
+    # add fronts
     if plotFronts:
         SAF, SACCF, SBDY, PF = None, None, None, None
         SAF, SACCF, SBDY, PF = loadFronts(address_fronts)   
         
         ax1.plot(SAF[:,0], SAF[:,1], lw = 1, ls='-', label='SAF', \
                  color='black', transform=proj_trans)
+        ax1.plot(PF[:,0], PF[:,1], lw = 1,ls='-', label='PF', \
+                 color='grey', transform=proj_trans)
         ax1.plot(SACCF[:,0], SACCF[:,1], lw = 1,ls='-', label='SACCF', \
                  color='green', transform=proj_trans)
         ax1.plot(SBDY[:,0], SBDY[:,1], lw = 1,ls='-', label='SBDY', \
                  color='blue', transform=proj_trans)
-        ax1.plot(PF[:,0], PF[:,1], lw = 1,ls='-', label='PF', \
-                 color='grey', transform=proj_trans)
         
         #ax1.legend(loc='upper left')
         ax1.legend(bbox_to_anchor=( 1.25,1.2), ncol=4, \
                    columnspacing = 0.8)
 
-    # Compute a circle in axes coordinates, 
+    # compute a circle in axes coordinates, 
     # which we can use as a boundary for the map.
     theta = np.linspace(0, 2*np.pi, 100)
     center = [0.5, 0.5]
@@ -98,10 +100,14 @@ def plotMapCircular(address, address_fronts, plotFronts, n_comp):
     ax1.coastlines()
     
     colorbar = plt.colorbar(CS)
+    cblabels = np.arange(1, int(n_comp)+1, 1)
+    cbloc = cblabels
+    colorbar.set_ticks(cbloc)
+    colorbar.set_ticklabels(cblabels)
     colorbar.set_label('Class', rotation=270, labelpad=10)
-#   plt.savefig(address+"Plots/Labels_Map_n"+str(n_comp)+\
-#               ".pdf",bbox_inches="tight",transparent=True)
-    plt.show()
+    plt.savefig(address+"Plots/Labels_Map_n"+str(n_comp)+\
+                ".pdf",bbox_inches="tight",transparent=True)
+#   plt.show()
     
 #######################################################################
     
@@ -116,42 +122,22 @@ def loadFronts(address_fronts):
 
 #######################################################################
 
-def discardWeakPoints(lon, lat, dynHeight, labels, \
-                      class_number_array, n_comp):
-# THIS DOES NOT WORK YET
-#
-    for k in class_number_array:
-        lon_k, lat_k, dynHeight_k, post_k, indices_k = \
-          None, None, None, None, None
-        indices_k = np.where(labels == (1.0*(k+1)))
-        lon_k, lat_k = lon[indices_k], lat[indices_k]
-        post_k = post_prob[:,k][indices_k]
- 
-        likelihood = np.zeros(len(post_k))
-        for i in range(len(post_k)):
-          if post_k[i] >= 0.99:
-            likelihood[i] = 0.99
-          elif post_k[i] >= 0.9 and post_k[i] < 0.99 :
-            likelihood[i] = 0.9
-          elif post_k[i] >= 0.66 and post_k[i] < 0.9 :
-            likelihood[i] = 0.66
-          elif post_k[i] >= 0.33 and post_k[i] < 0.66:
-            likelihood[i] = 0.33
-          elif post_k[i] >= 1/(n_comp) and post_k[i] < 0.33:
-            likelihood[i] = 1/(n_comp)
-#         else:
-#           print("WARNING: posterior value less than 1/k")
+def discardWeakPoints(post_prob, lon, lat, dynHeight, labels, \
+                      class_number_array, n_comp, threshold):
 
-        # discard all profile with post_prob less than threshold
-        keep_index = (post_prob.max(axis=1) >= 0.9)
+    lon_hp = []
+    lat_hp = []
+    dynHeight_hp = []
+    labels_hp = []
 
-        # subselect
-        xplot = lon[keep_index]
-        yplot = lat[keep_index]
-        dplot = dynHeight[keep_index]
-        cplot = labels[keep_index] 
+    for nprof in np.arange(0,lat.size):
+        if post_prob[nprof,int(labels[nprof])-1]>=threshold:
+            lon_hp = np.append(lon_hp,lon[nprof])
+            lat_hp = np.append(lat_hp,lat[nprof])
+            dynHeight_hp = np.append(dynHeight_hp,dynHeight[nprof])
+            labels_hp = np.append(labels_hp,labels[nprof])
 
-    return xplot, yplot, dplot, cplot
+    return lon_hp, lat_hp, dynHeight_hp, labels_hp
 
 ###############################################################################
 
@@ -169,68 +155,78 @@ def plotByDynHeight(address, address_fronts, runIndex, n_comp):
     class_number_array = np.arange(0,n_comp).reshape(-1,1)
     lon_pp, lat_pp, dynHeight_pp, varTime_pp, post_prob = \
         Print.readPosteriorProb(address, runIndex, class_number_array)
- 
+    ppmax=np.max(post_prob,1) 
+
     # plot the data in map form - individual
-    colorname = 'RdYlBu'
+    colorname = 'RdYlBu_r'
     colormap = plt.get_cmap(colorname,n_comp)
 
-    fig, axes = plt.subplots(2, 4, sharex=True, sharey=True)
-    # loop through each class, process and cut
-    for numclass in range(0,n_comp-1):
-        xplotNow = lon[labels==numclass]
-        yplotNow = dynHeight[labels==numclass]
-        postNow = post_prob[:,numclass][labels==numclass]
-        xplotNow = xplotNow[postNow>=0.95]
-        yplotNow = yplotNow[postNow>=0.95]
-        xplotNow = xplotNow[np.logical_not(np.isnan(yplotNow))]
-        yplotNow = yplotNow[np.logical_not(np.isnan(yplotNow))]
-        axes[int(np.floor(numclass/4)), numclass%4].scatter(xplotNow[::20], yplotNow[::20], 
-          s = 1.0, vmin = -0.5, vmax = n_comp-0.5, lw = 0)
-        axes[int(np.floor(numclass/4)), numclass%4].set_ylim((0.02, 0.18)) 
-        axes[int(np.floor(numclass/4)), numclass%4].set_xlim((-180, 180)) 
-
-    plt.setp(axes, xticks=[-90, 0, 90])
-    
-    plt.savefig(address+"Plots/classes_dynHeight_heatmap_95pct.pdf",\
-                bbox_inches="tight",transparent=True) 
-
+    threshold = 0.5
     # next, plot all classes on single plot
     plt.figure(figsize=(5,5))
-    xplotNow = lon
-    yplotNow = dynHeight
-    xplotNow = xplotNow[np.logical_not(np.isnan(dynHeight))]
-    yplotNow = yplotNow[np.logical_not(np.isnan(dynHeight))]
+#   xplotNow = lon
+#   yplotNow = dynHeight
+    # get rid of points with NaN values
+    xplotNow = lon[np.logical_not(np.isnan(dynHeight))]
+    yplotNow = dynHeight[np.logical_not(np.isnan(dynHeight))]
     labelsNow = labels[np.logical_not(np.isnan(dynHeight))]
-    CS = plt.scatter(xplotNow[::5], yplotNow[::5], s = 1.0, c = labelsNow[::5], cmap = colormap, 
-                     vmin = -0.5, vmax = n_comp-0.5, lw = 0)
+    ppmaxNow = ppmax[np.logical_not(np.isnan(dynHeight))]
+    # get rid of points with low posterior prob
+#   xplotNow = xplotNow[ppmaxNow>threshold]
+#   yplotNow = yplotNow[ppmaxNow>threshold]
+#   labelsNow = labelsNow[ppmaxNow>threshold]
+    # scatter plot
+    CS = plt.scatter(xplotNow[::10], yplotNow[::10], s = 1.0, c = labelsNow[::10], cmap = colormap, 
+                     vmin = 0.5, vmax = n_comp+0.5, lw = 0)
     plt.xlim((-180, 180)) 
     plt.ylim((0.02, 0.18)) 
     plt.xlabel('Longitude')
     plt.ylabel('Dynamic height (m)')
     plt.grid(color = '0.9')
+
+    # fix colorbar
     colorbar = plt.colorbar(CS)
+    cblabels = np.arange(1, int(n_comp)+1, 1)
+    cbloc = cblabels
+    colorbar.set_ticks(cbloc)
+    colorbar.set_ticklabels(cblabels)
     colorbar.set_label('Class', rotation=270, labelpad=10)
+
+    # save figure
     plt.savefig(address+"Plots/classes_dynHeight_single.pdf",bbox_inches="tight",transparent=True) 
 
 ###############################################################################
 
 def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=True):
+
     print("Plot.plotPosterior")
+
     # Load lat, lon and labels
     lon, lat, dynHeight, varTime, labels = None, None, None, None, None
-    lon, lat, dynHeight, varTime, labels = Print.readLabels(address, runIndex)
+    lon, lat, dynHeight, varTime, labels = Print.readLabelsUnsorted(address, runIndex)
 
-    # Load the posterior probabilities for each class
+    # load the posterior probabilities for each class
     class_number_array = None
     class_number_array = np.arange(0,n_comp).reshape(-1,1)
     lon_pp, lat_pp, dynHeight_pp, varTime_pp, post_prob = \
       Print.readPosteriorProb(address, runIndex, class_number_array)
 
-    for k in class_number_array:
+    # get colormap
+    colorname = 'RdYlBu_r'
+    colormap = plt.get_cmap(colorname, 4)
+
+    # integer labels
+    labels = labels.astype(int)
+
+    # subselect
+    for k in range(0,n_comp):
+        print(k)
         lon_k, lat_k, dynHeight_k, post_k, indices_k = None, None, None, None, None
-        indices_k = (np.where(labels == (1.0*k)))
+        indices_k = np.where( (labels-1) == k )
         lon_k, lat_k = lon[indices_k], lat[indices_k]
-        post_k = post_prob[:,k][indices_k]  
+        max_prob = np.max(post_prob,1)
+        post_k = max_prob[indices_k]  
+#       post_k = post_prob[:,k][indices_k]  
         likelihood = np.zeros(len(post_k))
         for i in range(len(post_k)):
             if post_k[i] >= 0.99:
@@ -239,57 +235,55 @@ def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=True):
                 likelihood[i] = 0.9
             elif post_k[i] >= 0.66 and post_k[i] < 0.9:
                 likelihood[i] = 0.66
-            elif post_k[i] >= 1/(n_comp) and post_k[i] < 0.66:
+            elif post_k[i] >= 0.33 and post_k[i] < 0.66:
+                likelihood[i] = 0.33
+            elif post_k[i] >= 1/(n_comp) and post_k[i] < 0.33:
                 likelihood[i] = 1/(n_comp)
-            else:
-                print("WARNING : Posterior Value less than 1/k")
-        # Plot the posterior probabilites
-        #ax = plt.subplot(111, polar=True)
-        ax = plt.axes(projection = ccrs.Orthographic(central_longitude=0.0, \
-             central_latitude=-90.0, globe=None))
-        colorname = 'RdYlBu'
-        colormap = plt.get_cmap(colorname, 4)
-        
-        theta = np.pi*(lon_k)/180.0
-        rho = 90 - abs(lat_k)
-   
-        CS = ax.scatter(theta[::1000] ,rho[::1000], 0.5, lw = 0, \
-             c = likelihood[::50], cmap=colormap, vmin = 0, vmax = 1)
+#           else:
+#               print("WARNING : Posterior Value less than 1/k")
+
+        # subselect
+        nsub = 10
+        xplot = lon_k[::nsub]
+        yplot = lat_k[::nsub]
+        cplot = likelihood[::nsub]
+
+        # projection
+        proj = ccrs.SouthPolarStereo()
+        proj_trans = ccrs.PlateCarree()
+        ax1 = plt.axes(projection=proj)
+        pdb.set_trace()
+        ax1.set_extent((-180,180,-90,-30),crs=proj_trans)
+        CS = ax1.scatter(xplot , yplot, s = 2.5, lw = 0, c = cplot, \
+                         cmap = colormap, vmin = 0, vmax = 1, transform = proj_trans)
 
         # plot fronts 
         if plotFronts:
             SAF, SACCF, SBDY, PF = None, None, None, None
-            SAF, SACCF, SBDY, PF = loadFronts(address_fronts)   
-            
-            theta_saf = np.pi*(SAF[:,0])/180.0
-            rho_saf = 90 - abs(SAF[:,1])
-            ax.plot(theta_saf, rho_saf, lw = 1, ls='-', label='SAF', color='black')
-            
-            theta_saccf = np.pi*(SACCF[:,0])/180.0
-            rho_saccf = 90 - abs(SACCF[:,1])
-            ax.plot(theta_saccf, rho_saccf, lw = 1,ls='-', label='SACCF', color='green')
-            
-            theta_sbdy = np.pi*(SBDY[:,0])/180.0
-            rho_sbdy = 90 - abs(SBDY[:,1])
-            ax.plot(theta_sbdy, rho_sbdy, lw = 1,ls='-', label='SBDY', color='blue')
-            
-            theta_pf = np.pi*(PF[:,0])/180.0
-            rho_pf = 90 - abs(PF[:,1])
-            ax.plot(theta_pf, rho_pf, lw = 1,ls='-', label='PF', color='grey')
-            
-            #ax1.legend(loc='upper left')
-            #ax.legend(bbox_to_anchor=( 1.25,1.25), ncol=4, columnspacing = 0.8)
-        
-        ax.set_theta_zero_location("N")
-        ax.set_theta_direction(-1)
-        ax.set_ylim(0,60)
-        plt.text(0, 1, "Class "+str(k[0]), transform = ax.transAxes)
-        ax.set_yticklabels([])
-        #colorbar = plt.colorbar(CS)
-        #colorbar.set_label('Probability of belonging to Class', rotation=270, labelpad=10)
-        plt.savefig(address+"Plots/v2_PostProb_Class"+str(k[0])+\
+            SAF, SACCF, SBDY, PF = loadFronts(address_fronts)  
+            ax1.plot(PF[:,0], PF[:,1], lw = 1,ls='-', label='PF', \
+                     color='grey', transform=proj_trans) 
+
+        # compute a circle in axes coordinates, which we can use as a boundary for the map.
+        theta = np.linspace(0, 2*np.pi, 100)
+        center = [0.5, 0.5]
+        radius = 0.52   # 0.46 corresponds to roughly 30S Latitude
+        verts = np.vstack([np.sin(theta), np.cos(theta)]).T
+        circle = mpath.Path(verts * radius + center)
+        ax1.set_boundary(circle, transform=ax1.transAxes)
+
+        # add features
+        ax1.gridlines()
+        ax1.coastlines()
+        ax1.set_extent((-180,180,-90,-30),crs=proj_trans)
+
+#       plt.text(0, 1, "Class "+str(k+1), transform = ax1.transAxes)
+
+        # show plot
+        plt.savefig(address+"Plots/v2_PostProb_Class"+str(k)+\
                     "_n"+str(n_comp)+".pdf",bbox_inches="tight",transparent=True)
-        plt.show()
+#       plt.show()
+        ax1.clear()
 
 ###############################################################################
 ###############################################################################
@@ -311,7 +305,7 @@ def plotProfileClass(address, runIndex, n_comp, space):
     if space == 'reduced':
         depth_array = col_reduced_array
     
-    # Load class properties
+    # load class properties
     gmm_weights, gmm_means, gmm_covariances = None, None, None
     gmm_weights, gmm_means, gmm_covariances = Print.readGMMclasses(address,\
                                                         runIndex, depth_array, space)
@@ -336,7 +330,7 @@ def plotProfileClass(address, runIndex, n_comp, space):
     #ax1.set_title("Class Profiles with Depth in SO - "+space)
     filename = address+"Plots/Class_Profiles_"+space+"_n"+str(n_comp)+".pdf"  
     plt.savefig(filename,bbox_inches="tight",transparent=True)
-    plt.show()
+#   plt.show()
 
 ###############################################################################
 ###############################################################################
@@ -392,7 +386,7 @@ def plotProfile(address, runIndex, space): # Uses traing profiles at the moment
     ax1.set_ylabel("Depth /dbar")
     filename = address+"Plots/Profiles_"+space+".pdf"  
     plt.savefig(filename,bbox_inches="tight",transparent=True)
-    plt.show()
+#   plt.show()
     
 ###############################################################################
 
@@ -505,7 +499,7 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, Nbins=1000):
                     str(n_comp)+"_"+\
                     space+str(int((depth_array[depth_array_mod[i]])))+\
                     ".pdf",bbox_inches="tight",transparent=True)
-        plt.show()
+#       plt.show()
     
 ###############################################################################    
 
@@ -558,7 +552,7 @@ def plotBIC(address, repeat_bic, max_groups, trend=True):
         plt.savefig(address+"Plots/BIC_trend.pdf",bbox_inches="tight",transparent=True)
     else:
         plt.savefig(address+"Plots/BIC.pdf",bbox_inches="tight",transparent=True)
-    plt.show()
+#   plt.show()
     
 ###############################################################################
 # Use the VBGMM to determine how many classes we should use in the GMM

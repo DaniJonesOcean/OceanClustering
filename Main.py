@@ -34,6 +34,7 @@ import scipy as sp
 import Load, Print, PCA, GMM, Reconstruct, Bic
 import ClassProperties
 import Plot
+import os.path
 import pdb
 
 # start the clock (performance timing)
@@ -44,7 +45,7 @@ start_time = time.clock()
 # -- GMM = performs GMM procedure (no BIC, no plots)
 # -- Plot = plots the results (located in address+ploc)
 run_mode = "Plot"
-print("Running in mode: "+run_mode)
+print("Running in mode: " + run_mode)
 
 # if you want to use fPCA, set this flag to 'true'
 # THIS DOES NOT YET WORK - DO NOT USE!
@@ -54,7 +55,7 @@ use_fPCA = False
 plotFronts = True
 
 # set parameters
-n_comp = 8           # number of classes in GMM object
+n_comp = 6           # number of classes in GMM object
 n_dimen = 0.999      # amount of variance retained in PCA
 cov_type = 'full'    # covariance type (full, tied, diag, or spherical)
 
@@ -64,8 +65,8 @@ runIndex = None
 
 # root location of program 
 address = "/data/expose/OceanClustering/"     
-# location of data to plot (make sure n_comp is correct)
-ploc = address + "n08_classes/"
+# location of data to plot (now using symbolic link approach)
+ploc = address 
 # location of raw data file
 filename_raw_data = "/data/expose/OceanClustering/Data_in/SO_Argo_all.mat"  
 # root location of ACC front files
@@ -133,13 +134,22 @@ def main(runIndex=None):
     Reconstruct.full_reconstruct(address, runIndex)
     Reconstruct.train_reconstruct(address, runIndex)
 
+    # calculate class properties, create data frame for later use
+    ClassProperties.main(address, runIndex, n_comp)
+
 #######################################################################
 
 # function that only carries out plotting 
 def mainPlot(address, address_fronts, runIndex, n_comp, plotFronts):
-    Plot.plotMapCircular(address, address_fronts, plotFronts, n_comp)
+
+    # read data frame with profiles and sorted labels
+    frame_store = address + 'Objects/AllProfiles.pkl'
+    allDF = pd.read_pickle(frame_store, compression='infer')
+
+    # make some plots
+    Plot.plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF)
 #   Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp)
-#   Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=False)
+#   Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=True)
 #   Plot.plotProfileClass(address, runIndex, n_comp, 'uncentred')
 #   Plot.plotProfileClass(address, runIndex, n_comp, 'depth')
 #   Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced')

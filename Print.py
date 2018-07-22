@@ -376,12 +376,92 @@ def readLoadFromFile_Test(address, runIndex, depth):
 
 ###############################################################################
 
+def printClassPropertiesUnsorted(address, runIndex, classPropTuple, old2new):
+    print("Print.printClassPropertiesUnsorted")
+
+    # open file
+    filename = address + "Data_store/Labels/ClassProperties_unsorted.csv"
+    fileHandle = open(filename, 'w')
+
+    # define names of variables to be written out
+    names_of_columns = ['lon_mean', 'lon_std', \
+                        'lat_mean', 'lat_std', \
+                        'dynHeight_mean', 'dynHeight_std', \
+                        'T_mean', 'T_std', \
+                        'T_cent_mean', 'T_cent_std', \
+                        'S_mean', 'S_std', \
+                        'Time_mean', 'Time_std'] 
+
+    # use dictwriter to write the header
+    writer = csv.DictWriter(fileHandle, fieldnames = names_of_columns, \
+                            delimiter = separator)
+    writer.writeheader()
+ 
+    # switch to 'writer' for data
+    writer = csv.writer(fileHandle, delimiter = separator)
+    columns = np.column_stack(classPropTuple)
+  
+    # write csv by line
+    for line in columns:
+        writer.writerow(line)
+
+    fileHandle.close()
+
+    # write old2new as two columns (old label, new label)
+    fileHandle = open(address + "Data_store/Labels/old2new.csv", 'w')
+    writer2 = csv.writer(fileHandle, delimiter = separator)
+    writer2.writerow(old2new)
+    fileHandle.close()
+
+###############################################################################
+
+# write class properties to file
+def printClassProperties(address, runIndex, classPropTuple, old2new):
+    print("Print.printClassProperties")
+
+    # open file
+    filename = address + "Data_store/Labels/ClassProperties.csv"
+    fileHandle = open(filename, 'w')
+
+    # define names of variables to be written out
+    names_of_columns = ['lon_mean', 'lon_std', \
+                        'lat_mean', 'lat_std', \
+                        'dynHeight_mean', 'dynHeight_std', \
+                        'T_mean', 'T_std', \
+                        'T_cent_mean', 'T_cent_std', \
+                        'S_mean', 'S_std', \
+                        'Time_mean', 'Time_std'] 
+
+    # use dictwriter to write the header
+    writer = csv.DictWriter(fileHandle, fieldnames = names_of_columns, \
+                            delimiter = separator)
+    writer.writeheader()
+ 
+    # switch to 'writer' for data
+    writer = csv.writer(fileHandle, delimiter = separator)
+    columns = np.column_stack(classPropTuple)
+  
+    # write csv by line
+    for line in columns:
+        writer.writerow(line)
+
+    fileHandle.close()
+
+    # write old2new as two columns (old label, new label)
+    fileHandle = open(address + "Data_store/Labels/old2new.csv", 'w')
+    writer2 = csv.writer(fileHandle, delimiter = separator)
+    writer2.writerow(old2new)
+    fileHandle.close()
+
+###############################################################################
+
 # PCA Printing
 def printPCAToFile(address, runIndex, lon, lat, dynHeight, \
                    X_pca, varTime, col_reduced):
     print("Print.printPCAToFile")
     for d in range(col_reduced):
-        filename = address+"Data_store/PCA/PCA_reddepth"+str(d)+".csv"        
+        filename = address + "Data_store/PCA/PCA_reddepth" + \
+                             str(int(d)).zfill(3) + ".csv"        
 
         file = open(filename, 'w')
         columns = np.column_stack((lon, lat, dynHeight, X_pca[:,d], varTime))
@@ -404,7 +484,7 @@ def printPCAToFile_Train(address, runIndex, lon_train, lat_train, dynHeight_trai
     for d in range(col_reduced):
         filename_train = address+\
            "Data_store/PCA_Train/PCA_Train_reddepth"+\
-            str(d)+".csv"        
+            str(int(d)).zfill(3)+".csv"        
 
         file_train = open(filename_train,'w')
         columns_train = np.column_stack((lon_train, lat_train, \
@@ -495,7 +575,7 @@ def printGMMclasses(address, runIndex, class_number_array, gmm_weights, gmm_mean
         filename_train = address+\
             "Data_store/GMM_classes_"+\
              space+"/GMM_classes_"\
-             +space+str(int(d).zfill(3))+".csv"        
+             +space+str(int(d)).zfill(3)+".csv"        
 
         file_train = open(filename_train,'w')
         columns_train = np.column_stack((class_number_array, \
@@ -552,6 +632,24 @@ def readGMMclasses(address, runIndex, depth_array, space):
 
 ########################################################################
 
+def printLabelsUnsorted(address, runIndex, lon, lat, dynHeight, varTime, labels):
+    print("Print.printLabelsUnsorted")
+    filename = address+"Data_store/Labels/Labels_unsorted.csv"
+
+    file = open(filename,'w')
+    columns = np.column_stack(( lon, lat, dynHeight, varTime, labels ))
+    data = columns
+    writer = csv.DictWriter(file, fieldnames = \
+             ['lon','lat','dynHeight','varTime','label'], delimiter = separator)
+    writer.writeheader()
+    writer = csv.writer(file, delimiter=separator)    
+    for line in data:
+        writer.writerow(line)
+    file.close() 
+    del filename, file
+
+########################################################################
+
 def printLabels(address, runIndex, lon, lat, dynHeight, varTime, labels):
     print("Print.printLabels")
     filename = address+"Data_store/Labels/Labels.csv"
@@ -567,6 +665,24 @@ def printLabels(address, runIndex, lon, lat, dynHeight, varTime, labels):
         writer.writerow(line)
     file.close() 
     del filename, file
+
+#######################################################################
+    
+def readLabelsUnsorted(address,runIndex):
+    print("Print.readLabelsUnsorted")
+    head_number = 1
+    filename = address+"Data_store/Labels/Labels_unsorted.csv"
+        
+    csvfile = np.genfromtxt(filename, delimiter=",",skip_header=head_number)
+    lon, lat, dynHeight, varTime, labels = None, None, None, None, None
+    
+    lon = csvfile[:,0]
+    lat = csvfile[:,1]
+    dynHeight = csvfile[:,2]
+    varTime = csvfile[:,3]
+    labels = csvfile[:,4]
+    
+    return lon, lat, dynHeight, varTime, labels
 
 #######################################################################
     
@@ -594,7 +710,7 @@ def printPosteriorProb(address, runIndex, lon, lat, dynHeight, \
     i = 0
     for class_number in class_number_array:
         filename = address+"Data_store/Probabilities/Post_prob_class"\
-                          +str(class_number)+".csv"
+                          +str(int(class_number)).zfill(3)+".csv"
         file = open(filename,'w')
         columns = np.column_stack(( lon, lat, dynHeight, varTime, post_prob[:,i] ))
         data = columns
@@ -618,7 +734,7 @@ def readPosteriorProb(address,runIndex,class_number_array):
     for class_number in class_number_array:
         filename = address+\
                    "Data_store/Probabilities/Post_prob_class"+\
-                   str(class_number)+".csv"
+                   str(int(class_number)).zfill(3) + ".csv"
 
         csvfile = np.genfromtxt(filename, delimiter=",",\
                                 skip_header=head_number)

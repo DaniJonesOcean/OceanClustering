@@ -68,9 +68,12 @@ def apply(address, runIndex, n_comp):
 
     # predict classes based on training dataset, output labels
     labels = gmm.predict(X_array)  # expected shape (n_profiles,)
+    Print.printLabelsUnsorted(address, runIndex, lon, lat, dynHeight, varTime, labels)
 
     # sort labels by mean SST of each class
-    sortedLabels = ClassProperties.main(address,n_comp,labels) 
+    # (do this during the "plot" stage now
+#   allDF, sortedLabels, old2new = ClassProperties.main(address,runIndex,n_comp) 
+#   Print.printLabels(address, runIndex, lon, lat, dynHeight, varTime, sortedLabels)
    
     # calculate posterior probabilities
     post_prob = gmm.predict_proba(X_array) # expected shape (n_profiles, classes)
@@ -79,7 +82,6 @@ def apply(address, runIndex, n_comp):
     class_number_array = np.arange(0,n_comp).reshape(-1,1)
     
     # Print Labels and probabilities to file
-    Print.printLabels(address, runIndex, lon, lat, dynHeight, varTime, sortedLabels)
     Print.printPosteriorProb(address, runIndex, lon, lat, dynHeight, \
                              varTime, post_prob, class_number_array)
     
