@@ -32,6 +32,7 @@ import time
 import numpy as np
 import scipy as sp
 import Load, Print, PCA, GMM, Reconstruct, Bic
+import pandas as pd
 import ClassProperties
 import Plot
 import os.path
@@ -143,13 +144,15 @@ def main(runIndex=None):
 def mainPlot(address, address_fronts, runIndex, n_comp, plotFronts):
 
     # read data frame with profiles and sorted labels
+    print('loading data frame (this could take a while)')
     frame_store = address + 'Objects/AllProfiles.pkl'
     allDF = pd.read_pickle(frame_store, compression='infer')
 
     # make some plots
+    print('creating plots')
     Plot.plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF)
-#   Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp)
-#   Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=True)
+    Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF)
+    Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF)
 #   Plot.plotProfileClass(address, runIndex, n_comp, 'uncentred')
 #   Plot.plotProfileClass(address, runIndex, n_comp, 'depth')
 #   Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced')

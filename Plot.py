@@ -39,13 +39,12 @@ def plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF):
     pskip = 10
 
     # select colormap (qualitative)
-    colorname = 'Pastel1'
+    colorname = 'RdYlBu_r'
     colormap = plt.get_cmap(colorname,n_comp)
-
-    # next - add ability to discard low pp values 
 
     # select x, y, and color data    
     surfaceDF = allDF[allDF.pressure == 15]
+    surfaceDF = surfaceDF[surfaceDF.posterior_probability >= threshold]
     xplot = surfaceDF['longitude'].values
     yplot = surfaceDF['latitude'].values
     cplot = surfaceDF['class'].values
@@ -107,7 +106,7 @@ def plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF):
     colorbar.set_label('Class', rotation=270, labelpad=10)
     plt.savefig(address+"Plots/Labels_Map_n"+str(n_comp)+\
                 ".pdf",bbox_inches="tight",transparent=True)
-#   plt.show()
+    plt.show()
     
 #######################################################################
     
@@ -122,61 +121,36 @@ def loadFronts(address_fronts):
 
 #######################################################################
 
-def discardWeakPoints(post_prob, lon, lat, dynHeight, labels, \
-                      class_number_array, n_comp, threshold):
-
-    lon_hp = []
-    lat_hp = []
-    dynHeight_hp = []
-    labels_hp = []
-
-    for nprof in np.arange(0,lat.size):
-        if post_prob[nprof,int(labels[nprof])-1]>=threshold:
-            lon_hp = np.append(lon_hp,lon[nprof])
-            lat_hp = np.append(lat_hp,lat[nprof])
-            dynHeight_hp = np.append(dynHeight_hp,dynHeight[nprof])
-            labels_hp = np.append(labels_hp,labels[nprof])
-
-    return lon_hp, lat_hp, dynHeight_hp, labels_hp
-
-###############################################################################
-
-def plotByDynHeight(address, address_fronts, runIndex, n_comp):
+def plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF):
 
     # print function name 
     print("Plot.plotByDynHeight")
 
-    # load lat, lon and labels
-    lon, lat, dynHeight, varTime, labels = None, None, None, None, None
-    lon, lat, dynHeight, varTime, labels = Print.readLabels(address, runIndex)
-
-    # Load the posterior probabilities for each class
-    class_number_array = None
-    class_number_array = np.arange(0,n_comp).reshape(-1,1)
-    lon_pp, lat_pp, dynHeight_pp, varTime_pp, post_prob = \
-        Print.readPosteriorProb(address, runIndex, class_number_array)
-    ppmax=np.max(post_prob,1) 
+    # plotting parameters
+    threshold = 0.9
+    pskip = 10
 
     # plot the data in map form - individual
     colorname = 'RdYlBu_r'
     colormap = plt.get_cmap(colorname,n_comp)
 
-    threshold = 0.5
+    # select points for plotting 
+    surfaceDF = allDF[allDF['depth_index']==0].dropna()
+    surfaceDF = surfaceDF[surfaceDF.posterior_probability >= threshold]
+    xplot = surfaceDF['longitude'].values
+    yplot = surfaceDF['dynamic_height'].values
+    cplot = surfaceDF['class_sorted'].values
+
+    # skip selected points
+    xplot = xplot[::pskip]
+    yplot = yplot[::pskip]
+    cplot = cplot[::pskip]
+
     # next, plot all classes on single plot
     plt.figure(figsize=(5,5))
-#   xplotNow = lon
-#   yplotNow = dynHeight
-    # get rid of points with NaN values
-    xplotNow = lon[np.logical_not(np.isnan(dynHeight))]
-    yplotNow = dynHeight[np.logical_not(np.isnan(dynHeight))]
-    labelsNow = labels[np.logical_not(np.isnan(dynHeight))]
-    ppmaxNow = ppmax[np.logical_not(np.isnan(dynHeight))]
-    # get rid of points with low posterior prob
-#   xplotNow = xplotNow[ppmaxNow>threshold]
-#   yplotNow = yplotNow[ppmaxNow>threshold]
-#   labelsNow = labelsNow[ppmaxNow>threshold]
+
     # scatter plot
-    CS = plt.scatter(xplotNow[::10], yplotNow[::10], s = 1.0, c = labelsNow[::10], cmap = colormap, 
+    CS = plt.scatter(xplot, yplot, s = 1.0, c = cplot, cmap = colormap, 
                      vmin = 0.5, vmax = n_comp+0.5, lw = 0)
     plt.xlim((-180, 180)) 
     plt.ylim((0.02, 0.18)) 
@@ -194,10 +168,11 @@ def plotByDynHeight(address, address_fronts, runIndex, n_comp):
 
     # save figure
     plt.savefig(address+"Plots/classes_dynHeight_single.pdf",bbox_inches="tight",transparent=True) 
+    plt.show()
 
 ###############################################################################
 
-def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts=True):
+def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF):
 
     print("Plot.plotPosterior")
 

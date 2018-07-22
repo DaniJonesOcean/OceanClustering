@@ -109,13 +109,12 @@ def main(address, runIndex, n_comp):
     allDF.to_pickle(frame_store, compression='infer')
 
     # write some summaries to csv
+    print('ClassProperties.main(): writing summaries')
+    allDFgrouped = allDF.groupby('class_sorted')
     for column in allDF:
         fname = address + 'Results/' + column + '_stats.csv'
-        tmp = allDFg[column].describe()
+        tmp = allDFgrouped[column].describe()
         tmp.to_csv(fname)
-
-    # return the new data frame
-#   return allDF, old2new
 
 #######################################################################
 
