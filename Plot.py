@@ -17,6 +17,8 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.path as mpath
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+import matplotlib.cm as cmx
 from scipy.optimize import curve_fit
 import pickle
 import pdb
@@ -106,7 +108,7 @@ def plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF):
     colorbar.set_label('Class', rotation=270, labelpad=10)
     plt.savefig(address+"Plots/Labels_Map_n"+str(n_comp)+\
                 ".pdf",bbox_inches="tight",transparent=True)
-    plt.show()
+#   plt.show()
     
 #######################################################################
     
@@ -168,7 +170,7 @@ def plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF):
 
     # save figure
     plt.savefig(address+"Plots/classes_dynHeight_single.pdf",bbox_inches="tight",transparent=True) 
-    plt.show()
+    #lt.show()
 
 ###############################################################################
 
@@ -176,49 +178,25 @@ def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF):
 
     print("Plot.plotPosterior")
 
-    # Load lat, lon and labels
-    lon, lat, dynHeight, varTime, labels = None, None, None, None, None
-    lon, lat, dynHeight, varTime, labels = Print.readLabelsUnsorted(address, runIndex)
-
-    # load the posterior probabilities for each class
-    class_number_array = None
-    class_number_array = np.arange(0,n_comp).reshape(-1,1)
-    lon_pp, lat_pp, dynHeight_pp, varTime_pp, post_prob = \
-      Print.readPosteriorProb(address, runIndex, class_number_array)
+    # threshold
+    nsub = 10
 
     # get colormap
-    colorname = 'RdYlBu_r'
+    colorname = 'RdYlBu'
     colormap = plt.get_cmap(colorname, 4)
 
-    # integer labels
-    labels = labels.astype(int)
+    # just select the surface
+    surfaceDF = allDF[allDF['depth_index']==0]
 
-    # subselect
+    # loop over index, make some plots
     for k in range(0,n_comp):
         print(k)
-        lon_k, lat_k, dynHeight_k, post_k, indices_k = None, None, None, None, None
-        indices_k = np.where( (labels-1) == k )
-        lon_k, lat_k = lon[indices_k], lat[indices_k]
-        max_prob = np.max(post_prob,1)
-        post_k = max_prob[indices_k]  
-#       post_k = post_prob[:,k][indices_k]  
-        likelihood = np.zeros(len(post_k))
-        for i in range(len(post_k)):
-            if post_k[i] >= 0.99:
-                likelihood[i] = 0.99
-            elif post_k[i] >= 0.9 and post_k[i] < 0.99 :
-                likelihood[i] = 0.9
-            elif post_k[i] >= 0.66 and post_k[i] < 0.9:
-                likelihood[i] = 0.66
-            elif post_k[i] >= 0.33 and post_k[i] < 0.66:
-                likelihood[i] = 0.33
-            elif post_k[i] >= 1/(n_comp) and post_k[i] < 0.33:
-                likelihood[i] = 1/(n_comp)
-#           else:
-#               print("WARNING : Posterior Value less than 1/k")
+        lon_k = surfaceDF[surfaceDF.class_sorted == k]['longitude']
+        lat_k = surfaceDF[surfaceDF.class_sorted == k]['latitude']
+        prob_k = surfaceDF[surfaceDF.class_sorted ==k]['posterior_probability']
+        likelihood = prob_k
 
         # subselect
-        nsub = 10
         xplot = lon_k[::nsub]
         yplot = lat_k[::nsub]
         cplot = likelihood[::nsub]
@@ -227,10 +205,9 @@ def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF):
         proj = ccrs.SouthPolarStereo()
         proj_trans = ccrs.PlateCarree()
         ax1 = plt.axes(projection=proj)
-        pdb.set_trace()
         ax1.set_extent((-180,180,-90,-30),crs=proj_trans)
         CS = ax1.scatter(xplot , yplot, s = 2.5, lw = 0, c = cplot, \
-                         cmap = colormap, vmin = 0, vmax = 1, transform = proj_trans)
+                         cmap = colormap, vmin = 0, vmax = 1.0, transform = proj_trans)
 
         # plot fronts 
         if plotFronts:
@@ -261,13 +238,72 @@ def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF):
         ax1.clear()
 
 ###############################################################################
+
+def plotProfilesByClass(address, runIndex, n_comp, allDF):
+
+    # print
+    print('Plot.plotProfilesByClass')
+
+    # set dimensions of plot
+    w = 6
+    h = 12 
+
+    # plot the data in map form - individual
+    colorname = 'RdYlBu_r'
+    colormap = plt.get_cmap(colorname,n_comp)
+
+    # get colors for plots
+    cNorm = colors.Normalize(vmin=0, vmax=n_comp)
+    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=colormap)
+
+    # loop through all classes, get mean/std temperature of profiles
+    for k in range(0,n_comp):
+
+        # create figure
+        fig = plt.figure(figsize=(7,7))
+
+        # select color for plot
+        colorVal = scalarMap.to_rgba(k)
+ 
+        # select all profiles from class k
+        class_k_DF = allDF[ allDF['class_sorted'] == k ]
+
+        # calculate statistics of those profiles at each pressure level
+        Tmean = class_k_DF.groupby(['depth_index'])['temperature'].mean().values
+        Tmedian = class_k_DF.groupby(['depth_index'])['temperature'].median().values
+        Tsig = class_k_DF.groupby(['depth_index'])['temperature'].std().values
+        P = class_k_DF.groupby(['depth_index'])['pressure'].mean().values 
+
+        # create plot
+        plt.plot(Tmean, P, color=colorVal, linestyle='solid', linewidth=5.0)
+        plt.plot(Tmean-Tsig, P, color=colorVal, linestyle='dashed', linewidth=5.0)
+        plt.plot(Tmean+Tsig, P, color=colorVal, linestyle='dashed', linewidth=5.0)
+
+        # invert axes
+        ax = plt.gca()
+        ax.set_ylim(0,1000)
+        ax.set_xlim(-2,25)
+        ax.grid(alpha=0.2)
+        ax.invert_yaxis()
+        ax.set_xlabel('Temperature (°C)')
+        ax.set_ylabel('Pressure (dbar)')
+
+        # save and show the plot 
+        plt.savefig(address + 'Plots/Tprof_by_pressure_class' + \
+                    str(k).zfill(3) + '.pdf', bbox_inches="tight", \
+                    transparent=True)
+#       plt.show()
+
 ###############################################################################
-def plotProfileClass(address, runIndex, n_comp, space):
+
+def plotProfileClass(address, runIndex, n_comp, space, allDF):
+
     # space will be 'depth', 'reduced' or 'uncentred'
     print("Plot.plotProfileClass "+str(space))
-    # Load depth
-    depth = None
-    depth = Print.readDepth(address, runIndex)
+
+    # plot the data in map form - individual
+    colorname = 'RdYlBu_r'
+    colormap = plt.get_cmap(colorname,n_comp)
     
     # Load reduced depth
     col_reduced = None
@@ -309,6 +345,7 @@ def plotProfileClass(address, runIndex, n_comp, space):
 
 ###############################################################################
 ###############################################################################
+
 def plotProfile(address, runIndex, space): # Uses traing profiles at the moment
         # space will be 'depth', 'original' or 'uncentred'
     print("Plot.plotProfileClass "+str(space))
@@ -531,6 +568,7 @@ def plotBIC(address, repeat_bic, max_groups, trend=True):
     
 ###############################################################################
 # Use the VBGMM to determine how many classes we should use in the GMM
+
 def plotWeights(address, runIndex):
     # Load depth
     depth = None
@@ -552,7 +590,7 @@ def plotWeights(address, runIndex):
     ax1.set_xlim(-1,n_comp)
     ax1.set_ylabel("Weight")
     ax1.grid(True)
-    ax1.set_title("VBGMM Class Weights")
+    ax1.set_title("VBGMM class weights")
     ax1.legend(loc='best')
     plt.savefig(address+"Plots/Weights_VBGMM.pdf", bbox_inches="tight",transparent=True)
     

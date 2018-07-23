@@ -153,7 +153,10 @@ def mainPlot(address, address_fronts, runIndex, n_comp, plotFronts):
     Plot.plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF)
     Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF)
     Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF)
-#   Plot.plotProfileClass(address, runIndex, n_comp, 'uncentred')
+    Plot.plotProfilesByClass(address, runIndex, n_comp, allDF)
+
+# older functions
+#   Plot.plotProfileClass(address, runIndex, n_comp, 'uncentred', allDF)
 #   Plot.plotProfileClass(address, runIndex, n_comp, 'depth')
 #   Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced')
 #   Plot.plotProfile(address, runIndex, 'original')
