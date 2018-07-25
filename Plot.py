@@ -402,11 +402,29 @@ def plotProfile(address, runIndex, space): # Uses traing profiles at the moment
     
 ###############################################################################
 
-def plotGaussiansIndividual(address, runIndex, n_comp, space, Nbins=1000):
+def plotGaussiansIndividual(address, runIndex, n_comp, space, allDF, Nbins):
+
     # space will be 'depth', 'reduced' or 'uncentred'
     print("Plot.plotGaussiansIndividual "+str(space))
+
+    # read old2new for mapping between unsorted and sorted classes
+    pkl_file = open(address + 'Results/old2new.pkl', 'rb')
+    old2new = pickle.load(pkl_file)
+    pkl_file.close()
+    sortEm = np.asarray(list(old2new.values()))
+ 
+    # read color map
+    colorname = 'RdYlBu_r'
+    colormap = plt.get_cmap(colorname,n_comp)
+
+    # get colors for plots
+    cNorm = colors.Normalize(vmin=0, vmax=n_comp)
+    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=colormap)
+ 
+    # if in depth space or uncentred
     if space == 'depth' or space == 'uncentred':
-        # Load depth
+
+        # load depth
         depth = None
         depth = Print.readDepth(address, runIndex)
         depth_array = depth
@@ -414,22 +432,16 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, Nbins=1000):
         depth_array_mod = np.array([0,50,100,150,-1])
         print("depth_array_mod.shape = ", depth_array_mod.shape)
         
-        # Load X_train array and X_train_centred array
+        # load X_train array and X_train_centred array
         lon_train, lat_train, dynHeight_train, X_train, \
           X_train_centred, varTime_train = None, None, None, None, None, None
         lon_train, lat_train, dynHeight_train, X_train, X_train_centred, varTime_train = \
                         Print.readReconstruction(address, runIndex, depth, True)
-        """
-        lon_train, lat_train, dynHeight_train, Tint_train_array, X_train_array, \
-            Sint_train_array, varTime_train = None, None, None, None, None, None, None
-        lon_train,lat_train, dynHeight_train, Tint_train_array, X_train_array, \
-            Sint_train_array, varTime_train = Print.readLoadFromFile_Train(address, runIndex, depth)    
-        X_train_centred = X_train_array
-        """
         print("VALUE = ", X_train_centred[10,0])
         
     if space == 'reduced':
-        # Load reduced depth
+
+        # load reduced depth
         col_reduced = None
         col_reduced = Print.readColreduced(address, runIndex)
         depth_array = np.arange(col_reduced)
@@ -445,14 +457,15 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, Nbins=1000):
     gmm_weights, gmm_means, gmm_covariances = None, None, None
     gmm_weights, gmm_means, gmm_covariances = Print.readGMMclasses(address,\
                                                         runIndex, depth_array, space)
-    if space == 'uncentred':
-        stand = None
-        with open(address+"Objects/Scale_object.pkl", 'rb') as input:
-            stand = pickle.load(input)
-        gmm_means = stand.inverse_transform(gmm_means)
-        gmm_covariances = stand.inverse_transform(gmm_covariances)
+
+#   if space == 'uncentred':
+#       stand = None
+#       with open(address+"Objects/Scale_object.pkl", 'rb') as input:
+#           stand = pickle.load(input)
+#       gmm_means = stand.inverse_transform(gmm_means)
+#       gmm_covariances = stand.inverse_transform(gmm_covariances)
     
-    print("Shapes: ", gmm_weights.shape, gmm_means.shape, gmm_covariances.shape)
+    print("shapes: ", gmm_weights.shape, gmm_means.shape, gmm_covariances.shape)
     print("depth_array_mod.shape = ", depth_array_mod.shape)
     
     # define the gaussian function
@@ -460,7 +473,7 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, Nbins=1000):
         return (np.exp(-np.power(x - mu, 2.) / (2 * cov)))/(np.sqrt(cov*np.pi*2))
     
     for i in range(len(depth_array_mod)):
-        print("About to plot")
+#       print("About to plot")
         X_row = None
         X_row = X_train_centred[:,int(depth_array_mod[i])]
         if space == 'uncentred':
@@ -469,7 +482,7 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, Nbins=1000):
         means_row, cov_row = None, None
         means_row = gmm_means[:,int(depth_array_mod[i])]
         cov_row = abs(gmm_covariances[:,int(depth_array_mod[i])])
-        print("Covariance = ", cov_row)
+#       print("Covariance = ", cov_row)
         
         xmax, xmin = None, None
         xmax = np.max(X_row)*1.1
@@ -480,29 +493,36 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, Nbins=1000):
         fig, ax1 = plt.subplots()
         x_values = None
         x_values = np.linspace(xmin, xmax, 120)
-        print(x_values.shape, min(x_values), max(x_values))
-        
+#       print(x_values.shape, min(x_values), max(x_values))
         y_total = np.zeros(n_comp*120).reshape(n_comp,120)
-        
+
+        # switch order of classes using old2new
+        gmm_weights_s = gmm_weights[sortEm]
+        means_row_s = means_row[sortEm]
+        cov_row_s = cov_row[sortEm]
+
+        # loop through classes       
         for n in range(n_comp):
+            colorVal = scalarMap.to_rgba(n)
             y_gaussian = None
             # use if diag
-            y_gaussian = gmm_weights[n]*gaussianFunc(x_values, means_row[n] , cov_row[n]) 
+            y_gaussian = gmm_weights_s[n]*gaussianFunc(x_values, \
+                         means_row_s[n] , cov_row_s[n]) 
             y_total[n,:] = y_gaussian
-            ax1.plot(x_values, y_gaussian, label=str(n))
+            ax1.plot(x_values, y_gaussian, label=str(n+1), color=colorVal, lw=2)
         
-        ax1.plot(x_values, np.sum(y_total,axis=0), lw = 2, color = 'black', label="Overall")
+        ax1.plot(x_values, np.sum(y_total,axis=0), lw = 3, color = 'black', label="Overall")
         ax1.hist(X_row, bins=Nbins, normed=True, facecolor='grey', lw = 0)
         ax1.set_ylabel("Probability density")
-        ax1.set_xlabel("Normalized Temperature Anomaly")
+        ax1.set_xlabel("Normalized temperature anomaly")
         if space == 'reduced':
-            ax1.set_xlabel("Normalized Anomaly")
+            ax1.set_xlabel("Normalized anomaly")
         if space == 'uncentred':
             ax1.set_xlabel("Temperature /degrees")
-        ax1.set_title("GMM n = "+\
-                      str(n_comp)+\
-                      ", "+space+" = "+\
-                      str(int(depth_array[depth_array_mod[i]])))
+#       ax1.set_title("GMM n = "+\
+#                     str(n_comp)+\
+#                     ", "+space+" = "+\
+#                     str(int(depth_array[depth_array_mod[i]])))
         ax1.grid(True)
         ax1.set_xlim(xmin,xmax)
         ax1.legend(loc='best')
@@ -511,8 +531,8 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, Nbins=1000):
                     str(n_comp)+"_"+\
                     space+str(int((depth_array[depth_array_mod[i]])))+\
                     ".pdf",bbox_inches="tight",transparent=True)
-#       plt.show()
-    
+        plt.show()
+   
 ###############################################################################    
 
 def plotBIC(address, repeat_bic, max_groups, trend=True): 

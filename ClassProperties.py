@@ -23,8 +23,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import Print
 import pickle
+import csv
 
 def main(address, runIndex, n_comp):
+
     print("ClassProperties.main()")
 
     # set paths
@@ -100,6 +102,16 @@ def main(address, runIndex, n_comp):
 
     # construct dictionary to replace old class numbers with new ones
     di = dict(zip(range(0,n_comp),old2new))
+
+    # save dictionary to csv for later use
+    with open(address + 'Results/old2new.csv', 'w') as csvfile:
+        w = csv.DictWriter(csvfile, di.keys())
+        w.writerow(di)
+
+    # write to pickle file for later use
+    f = open(address + 'Results/old2new.pkl', 'wb')
+    pickle.dump(di,f)
+    f.close()
 
     # add sorted class numbers as a new column
     allDF['class_sorted']=allDF['class'].map(di)

@@ -59,6 +59,7 @@ plotFronts = True
 n_comp = 6           # number of classes in GMM object
 n_dimen = 0.999      # amount of variance retained in PCA
 cov_type = 'full'    # covariance type (full, tied, diag, or spherical)
+nbins = 500          # number of bins to use in histograms
 
 # put here for a quick fix 
 # we can get rid of this variable in a later version of the code
@@ -150,15 +151,13 @@ def mainPlot(address, address_fronts, runIndex, n_comp, plotFronts):
 
     # make some plots
     print('creating plots')
-    Plot.plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF)
-    Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF)
-    Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF)
-    Plot.plotProfilesByClass(address, runIndex, n_comp, allDF)
+#   Plot.plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF)
+#   Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF)
+#   Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF)
+#   Plot.plotProfilesByClass(address, runIndex, n_comp, allDF)
+    Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced', allDF, nbins)
 
 # older functions
-#   Plot.plotProfileClass(address, runIndex, n_comp, 'uncentred', allDF)
-#   Plot.plotProfileClass(address, runIndex, n_comp, 'depth')
-#   Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced')
 #   Plot.plotProfile(address, runIndex, 'original')
 #   Plot.plotProfile(address, runIndex, 'uncentred')
 #   Plot.plotWeights(address, runIndex)
