@@ -41,8 +41,8 @@ def main(address, filename_raw_data, runIndex, subsample_uniform, subsample_rand
     print("Dealing with remaining NaN values")
     Tint, Sint = dealwithNan(Tint, Sint)
     
-    ## At this point the data has been successfully cleaned.
-    """ Now we need to subselect the training data """
+    # at this point the data has been successfully cleaned.
+    """ now we need to subselect the training data """
     print("Selecting subset of data that will be used as training data")
     Tint_train, Sint_train, varTime_train = None, None, None
     if subsample_uniform: # currently working 

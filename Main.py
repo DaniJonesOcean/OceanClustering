@@ -45,6 +45,7 @@ start_time = time.clock()
 # -- BIC = calculates BIC scores for a range of classes
 # -- GMM = performs GMM procedure (no BIC, no plots)
 # -- Plot = plots the results (located in address+ploc)
+# -- Props = only carry out the class property calcs 
 run_mode = "Plot"
 print("Running in mode: " + run_mode)
 
@@ -56,7 +57,7 @@ use_fPCA = False
 plotFronts = True
 
 # set parameters
-n_comp = 6           # number of classes in GMM object
+n_comp = 10          # number of classes in GMM object
 n_dimen = 0.999      # amount of variance retained in PCA
 cov_type = 'full'    # covariance type (full, tied, diag, or spherical)
 nbins = 500          # number of bins to use in histograms
@@ -136,6 +137,14 @@ def main(runIndex=None):
     Reconstruct.full_reconstruct(address, runIndex)
     Reconstruct.train_reconstruct(address, runIndex)
 
+    # calculate properties
+    mainProperties(address, runIndex, n_comp)
+
+#######################################################################
+
+# function that only carries out the classification step
+def mainProperties(address, runIndex, n_comp):
+
     # calculate class properties, create data frame for later use
     ClassProperties.main(address, runIndex, n_comp)
 
@@ -144,6 +153,9 @@ def main(runIndex=None):
 # function that only carries out plotting 
 def mainPlot(address, address_fronts, runIndex, n_comp, plotFronts):
 
+    # if the required directory structure doesn't exist, create it
+    makeDirectoryStructure(address)
+
     # read data frame with profiles and sorted labels
     print('loading data frame (this could take a while)')
     frame_store = address + 'Objects/AllProfiles.pkl'
@@ -151,10 +163,10 @@ def mainPlot(address, address_fronts, runIndex, n_comp, plotFronts):
 
     # make some plots
     print('creating plots')
-#   Plot.plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF)
-#   Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF)
-#   Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF)
-#   Plot.plotProfilesByClass(address, runIndex, n_comp, allDF)
+    Plot.plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF)
+    Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF)
+    Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF)
+    Plot.plotProfilesByClass(address, runIndex, n_comp, allDF)
     Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced', allDF, nbins)
 
 # older functions
@@ -251,16 +263,21 @@ def makeDirectoryStructure(address):
 
 # main program loop 
 if (run_mode=="BIC"):
-	Bic.main(address, filename_raw_data,subsample_bic, repeat_bic, max_groups, \
-        	grid_bic, conc_bic, size_bic, n_dimen, fraction_nan_samples, \
-        	fraction_nan_depths, cov_type)
-	Plot.plotBIC(address, repeat_bic, max_groups)
+    Bic.main(address, filename_raw_data,subsample_bic, repeat_bic, max_groups, \
+        grid_bic, conc_bic, size_bic, n_dimen, fraction_nan_samples, \
+        fraction_nan_depths, cov_type)
+    Plot.plotBIC(address, repeat_bic, max_groups)
 elif (run_mode=="GMM"):
-	main()
+    main()
 elif (run_mode=="Plot"):
-	mainPlot(ploc, address_fronts, runIndex, n_comp, plotFronts) 
+    mainPlot(ploc, address_fronts, runIndex, n_comp, plotFronts) 
+elif (run_mode=="GMM+Plot"):
+    main()
+    mainPlot(ploc, address_fronts, runIndex, n_comp, plotFronts) 
+elif (run_mode=="Props"):
+    mainProperties(address, runIndex, n_comp) 
 else:
-	print('Parameter run_mode not set properly. Check Main.py')
+    print('Parameter run_mode not set properly. Check Main.py')
 
 # print runtime for performance
 print('Main runtime = ', time.clock() - start_time,' s')

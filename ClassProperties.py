@@ -95,13 +95,15 @@ def main(address, runIndex, n_comp):
     surfaceDFg = surfaceDF.groupby(['class'])
 
     # sea surface properties
+    T_means = allDF.groupby(['class'])['temperature'].mean()
+    SST_means = surfaceDFg['temperature'].mean()
     SST_medians = surfaceDFg['temperature'].median()
 
     # sort by temperature (these are the new class numbers)
-    old2new = np.argsort(SST_medians.values) 
+    old2new = np.argsort(T_means.values) 
 
     # construct dictionary to replace old class numbers with new ones
-    di = dict(zip(range(0,n_comp),old2new))
+    di = dict(zip(old2new,range(0,n_comp)))
 
     # save dictionary to csv for later use
     with open(address + 'Results/old2new.csv', 'w') as csvfile:
@@ -130,20 +132,4 @@ def main(address, runIndex, n_comp):
 
 #######################################################################
 
-def sortLabels(oldLabels,old2new):
-
-    # this vector will store the sorted labels 
-    sortedLabels = np.zeros_like(oldLabels)
-    
-    # update the labels based on old2new
-    for nprofile in range(0,len(oldLabels)):
-        sortedLabels[nprofile] = old2new[int(oldLabels[nprofile])]
-
-    # let's keep python indexing right up until plotting
-    # shift indices by one (from python to conventional)
-    # sortedLabels = sortedLabels + 1
- 
-    return sortedLabels    
-
-#######################################################################
 

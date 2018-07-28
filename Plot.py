@@ -49,12 +49,15 @@ def plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF):
     surfaceDF = surfaceDF[surfaceDF.posterior_probability >= threshold]
     xplot = surfaceDF['longitude'].values
     yplot = surfaceDF['latitude'].values
-    cplot = surfaceDF['class'].values
+    cplot = surfaceDF['class_sorted'].values
 
     # subselect
     xplot = xplot[::pskip]
     yplot = yplot[::pskip]
     cplot = cplot[::pskip]
+
+    # shift indices for plotting
+    cplot = cplot + 1
 
     # select map and projection
     proj = ccrs.SouthPolarStereo()
@@ -102,6 +105,7 @@ def plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF):
     
     colorbar = plt.colorbar(CS)
     cblabels = np.arange(1, int(n_comp)+1, 1)
+#   cblabels = np.arange(0, int(n_comp), 1)
     cbloc = cblabels
     colorbar.set_ticks(cbloc)
     colorbar.set_ticklabels(cblabels)
@@ -148,11 +152,14 @@ def plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF):
     yplot = yplot[::pskip]
     cplot = cplot[::pskip]
 
+    # shift index for plotting
+    cplot = cplot + 1
+
     # next, plot all classes on single plot
     plt.figure(figsize=(5,5))
 
     # scatter plot
-    CS = plt.scatter(xplot, yplot, s = 1.0, c = cplot, cmap = colormap, 
+    CS = plt.scatter(xplot, yplot, s = 1.0, c = cplot, cmap = colormap, \
                      vmin = 0.5, vmax = n_comp+0.5, lw = 0)
     plt.xlim((-180, 180)) 
     plt.ylim((0.02, 0.18)) 
@@ -163,6 +170,7 @@ def plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF):
     # fix colorbar
     colorbar = plt.colorbar(CS)
     cblabels = np.arange(1, int(n_comp)+1, 1)
+#   cblabels = np.arange(0, int(n_comp), 1)
     cbloc = cblabels
     colorbar.set_ticks(cbloc)
     colorbar.set_ticklabels(cblabels)
@@ -531,7 +539,7 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, allDF, Nbins):
                     str(n_comp)+"_"+\
                     space+str(int((depth_array[depth_array_mod[i]])))+\
                     ".pdf",bbox_inches="tight",transparent=True)
-        plt.show()
+#       plt.show()
    
 ###############################################################################    
 

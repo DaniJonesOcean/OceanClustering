@@ -13,6 +13,8 @@ Purpose:
 """
 import time
 import numpy as np
+from pathlib import Path
+import os.path
 import csv
 
 start_time = time.clock()
@@ -162,23 +164,26 @@ def printLoadToFile(address, runIndex, lon, lat, dynHeight, Tint, \
                    "Data_store/CentredAndUncentred/CentredAndUncentred_depth"+\
                    str(int(d)).zfill(3)+".csv"
 
-        file = open(filename,'w')
-        columns= np.column_stack((lon, lat, dynHeight, \
-                                 Tint[:,i], var_centre[:,i], \
-                                 Sint[:,i], varTime))
-        data = columns
-        writer = csv.DictWriter(file, fieldnames = \
-                               ['lon','lat','dynHeight',\
-                               'Tint_'+str(int(d)).zfill(3),'Tint_centred',\
-                               'Sint','Time'], delimiter = separator)
-        writer.writeheader()
-        writer = csv.writer(file, delimiter=separator)
-        for line in data:
-            writer.writerow(line)    
-        file.close()
-        del filename, file
+        # if file does not exist, write it
+        if (os.path.isfile(filename)==False):
+
+            file = open(filename,'w')
+            columns= np.column_stack((lon, lat, dynHeight, \
+                                     Tint[:,i], var_centre[:,i], \
+                                     Sint[:,i], varTime))
+            data = columns
+            writer = csv.DictWriter(file, fieldnames = \
+                                   ['lon','lat','dynHeight',\
+                                   'Tint_'+str(int(d)).zfill(3),'Tint_centred',\
+                                   'Sint','Time'], delimiter = separator)
+            writer.writeheader()
+            writer = csv.writer(file, delimiter=separator)
+            for line in data:
+                writer.writerow(line)    
+            file.close()
+            del filename, file
         
-        i = i + 1
+            i = i + 1
 
 #######################################################################
         
