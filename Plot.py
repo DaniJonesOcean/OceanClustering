@@ -32,7 +32,7 @@ import time
 
 start_time = time.clock()
 
-def plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF):
+def plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF, colormap):
     print("Plot.plotMapCircular")
     runIndex = None
 
@@ -41,8 +41,9 @@ def plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF):
     pskip = 10
 
     # select colormap (qualitative)
-    colorname = 'RdYlBu_r'
-    colormap = plt.get_cmap(colorname,n_comp)
+    # now passed in as an external argument
+#   colorname = 'RdYlBu_r'
+#   colormap = plt.get_cmap(colorname,n_comp)
 
     # select x, y, and color data    
     surfaceDF = allDF[allDF.pressure == 15]
@@ -127,7 +128,7 @@ def loadFronts(address_fronts):
 
 #######################################################################
 
-def plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF):
+def plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF, colormap):
 
     # print function name 
     print("Plot.plotByDynHeight")
@@ -137,8 +138,9 @@ def plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF):
     pskip = 10
 
     # plot the data in map form - individual
-    colorname = 'RdYlBu_r'
-    colormap = plt.get_cmap(colorname,n_comp)
+    # now passed in as an argument
+#   colorname = 'RdYlBu_r'
+#   colormap = plt.get_cmap(colorname,n_comp)
 
     # select points for plotting 
     surfaceDF = allDF[allDF['depth_index']==0].dropna()
@@ -159,7 +161,7 @@ def plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF):
     plt.figure(figsize=(5,5))
 
     # scatter plot
-    CS = plt.scatter(xplot, yplot, s = 1.0, c = cplot, cmap = colormap, \
+    CS = plt.scatter(xplot, yplot, s = 2.0, c = cplot, cmap = colormap, \
                      vmin = 0.5, vmax = n_comp+0.5, lw = 0)
     plt.xlim((-180, 180)) 
     plt.ylim((0.02, 0.18)) 
@@ -214,7 +216,7 @@ def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF):
         proj_trans = ccrs.PlateCarree()
         ax1 = plt.axes(projection=proj)
         ax1.set_extent((-180,180,-90,-30),crs=proj_trans)
-        CS = ax1.scatter(xplot , yplot, s = 2.5, lw = 0, c = cplot, \
+        CS = ax1.scatter(xplot , yplot, s = 2.0, lw = 0, c = cplot, \
                          cmap = colormap, vmin = 0, vmax = 1.0, transform = proj_trans)
 
         # plot fronts 
@@ -247,7 +249,7 @@ def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF):
 
 ###############################################################################
 
-def plotProfilesByClass(address, runIndex, n_comp, allDF):
+def plotProfilesByClass(address, runIndex, n_comp, allDF, colormap):
 
     # print
     print('Plot.plotProfilesByClass')
@@ -257,8 +259,9 @@ def plotProfilesByClass(address, runIndex, n_comp, allDF):
     h = 12 
 
     # plot the data in map form - individual
-    colorname = 'RdYlBu_r'
-    colormap = plt.get_cmap(colorname,n_comp)
+    # now passed in as an external argument
+#   colorname = 'RdYlBu_r'
+#   colormap = plt.get_cmap(colorname,n_comp)
 
     # get colors for plots
     cNorm = colors.Normalize(vmin=0, vmax=n_comp)
@@ -304,14 +307,15 @@ def plotProfilesByClass(address, runIndex, n_comp, allDF):
 
 ###############################################################################
 
-def plotProfileClass(address, runIndex, n_comp, space, allDF):
+def plotProfileClass(address, runIndex, n_comp, space, allDF, colormap):
 
     # space will be 'depth', 'reduced' or 'uncentred'
     print("Plot.plotProfileClass "+str(space))
 
     # plot the data in map form - individual
-    colorname = 'RdYlBu_r'
-    colormap = plt.get_cmap(colorname,n_comp)
+    # now passed in as an external argument
+#   colorname = 'RdYlBu_r'
+#   colormap = plt.get_cmap(colorname,n_comp)
     
     # Load reduced depth
     col_reduced = None
@@ -410,7 +414,7 @@ def plotProfile(address, runIndex, space): # Uses traing profiles at the moment
     
 ###############################################################################
 
-def plotGaussiansIndividual(address, runIndex, n_comp, space, allDF, Nbins):
+def plotGaussiansIndividual(address, runIndex, n_comp, space, allDF, Nbins, colormap):
 
     # space will be 'depth', 'reduced' or 'uncentred'
     print("Plot.plotGaussiansIndividual "+str(space))
@@ -422,8 +426,9 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, allDF, Nbins):
     sortEm = np.asarray(list(old2new.values()))
  
     # read color map
-    colorname = 'RdYlBu_r'
-    colormap = plt.get_cmap(colorname,n_comp)
+    # now read in as an external argument
+#   colorname = 'RdYlBu_r'
+#   colormap = plt.get_cmap(colorname,n_comp)
 
     # get colors for plots
     cNorm = colors.Normalize(vmin=0, vmax=n_comp)
@@ -519,7 +524,8 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, allDF, Nbins):
             y_total[n,:] = y_gaussian
             ax1.plot(x_values, y_gaussian, label=str(n+1), color=colorVal, lw=2)
         
-        ax1.plot(x_values, np.sum(y_total,axis=0), lw = 3, color = 'black', label="Overall")
+        ax1.plot(x_values, np.sum(y_total,axis=0), lw = 2, color = 'black', \
+                 label="Overall", linestyle='dashed')
         ax1.hist(X_row, bins=Nbins, normed=True, facecolor='grey', lw = 0)
         ax1.set_ylabel("Probability density")
         ax1.set_xlabel("Normalized temperature anomaly")

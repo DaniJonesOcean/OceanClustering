@@ -24,18 +24,18 @@ start_time = time.clock()
 def create(address, runIndex, n_comp, cov_type):
     print("GMM.create")
     """ Takes the training dataset and creates the GMM object """
-    # Load col_reduced
+    # load col_reduced
     col_reduced = None
     col_reduced = Print.readColreduced(address, runIndex)
     col_reduced_array = np.arange(col_reduced)
     
-    # Load Training data in reduced pca space
+    # load training data in reduced pca space
     lon_train, lat_train, dynHeight_train, X_train_array, varTime_train = \
       None, None, None, None, None
     lon_train, lat_train, dynHeight_train, X_train_array, varTime_train = \
       Print.readPCAFromFile_Train(address, runIndex, col_reduced)
     
-    # Calculate GMM Object
+    # calculate GMM Object
     gmm, gmm_weights, gmm_means, gmm_covariances = \
       None, None, None, None
     gmm, gmm_weights, gmm_means, gmm_covariances = \
@@ -49,11 +49,11 @@ def create(address, runIndex, n_comp, cov_type):
 ###############################################################################
 def apply(address, runIndex, n_comp):
     print("GMM.apply")
-    # Load col_reduced value
+    # load col_reduced value
     col_reduced = None
     col_reduced = Print.readColreduced(address, runIndex)
     
-    # Load full data array - X
+    # load full data array - X
     lon, lat, dynHeight, X_array, varTime = None, None, None, None, None
     lon, lat, dynHeight, X_array, varTime = Print.readPCAFromFile(address, \
       runIndex, col_reduced)
@@ -67,7 +67,7 @@ def apply(address, runIndex, n_comp):
     sortedLabels, labels, post_prob = None, None, None
 
     # predict classes based on training dataset, output labels
-    labels = gmm.predict(X_array)  # expected shape (n_profiles,)
+    labels = gmm.predict(X_array)  # expected shape (n_profiles, pca index)
     Print.printLabelsUnsorted(address, runIndex, lon, lat, dynHeight, varTime, labels)
 
     # sort labels by mean SST of each class
