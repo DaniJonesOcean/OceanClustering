@@ -58,7 +58,7 @@ use_fPCA = False
 plotFronts = True
 
 # set parameters
-n_comp = 8          # number of classes in GMM object
+n_comp = 20         # number of classes in GMM object
 n_dimen = 0.999      # amount of variance retained in PCA
 cov_type = 'full'    # covariance type (full, tied, diag, or spherical)
 nbins = 500          # number of bins to use in histograms
@@ -158,25 +158,22 @@ def mainPlot(address, address_fronts, runIndex, n_comp, plotFronts):
     makeDirectoryStructure(address)
   
     # set one colormap
-    colormap = plt.get_cmap('RdBu_r', n_comp)
+#   colormap = plt.get_cmap('RdBu_r', n_comp)
 
-    # read data frame with profiles and sorted labels
-    print('loading data frame (this could take a while)')
-    frame_store = address + 'Objects/AllProfiles.pkl'
-    allDF = pd.read_pickle(frame_store, compression='infer')
+#   # read data frame with profiles and sorted labels
+#   print('loading data frame (this could take a while)')
+#   frame_store = address + 'Objects/AllProfiles.pkl'
+#   allDF = pd.read_pickle(frame_store, compression='infer')
 
-    # make some plots
-    print('creating plots')
-    Plot.plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF, colormap)
-    Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF, colormap)
-    Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF)
-    Plot.plotProfilesByClass(address, runIndex, n_comp, allDF, colormap)
-    Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced', allDF, nbins, colormap)
-
-# older functions
-#   Plot.plotProfile(address, runIndex, 'original')
-#   Plot.plotProfile(address, runIndex, 'uncentred')
+#   # make some plots
+#   print('creating plots')
+#   Plot.plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF, colormap)
+#   Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF, colormap)
+#   Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF)
+#   Plot.plotProfilesByClass(address, runIndex, n_comp, allDF, colormap)
+#   Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced', allDF, nbins, colormap)
 #   Plot.plotWeights(address, runIndex)
+    Plot.plotPCAcomponents(address, runIndex, n_comp)
 
 #######################################################################
 

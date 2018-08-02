@@ -189,11 +189,23 @@ def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF):
     print("Plot.plotPosterior")
 
     # threshold
-    nsub = 10
+    nsub = 5
 
     # get colormap
-    colorname = 'RdYlBu'
-    colormap = plt.get_cmap(colorname, 4)
+#   colorname = 'RdYlBu'
+#   colormap = plt.get_cmap(colorname, 4)
+
+    # cutom colors from colorbrewer2.org
+    col4 = [254/256, 240/256, 217/256]
+    col3 = [253/256, 204/256, 138/256]
+    col2 = [252/256, 141/256, 89/256]
+    col1 = [215/256, 48/256, 31/256]
+    cmap = mpl.colors.ListedColormap([col1, col2, col4])
+#   cmap.set_under(col1)
+#   cmap.set_over(col4)
+    bounds = [0.00, 0.75, 0.90, 1.00]
+#   norm = mpl.colors.Normalize(vmin=0.0, vmax=1.0)
+    norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
 
     # just select the surface
     surfaceDF = allDF[allDF['depth_index']==0]
@@ -206,6 +218,29 @@ def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF):
         prob_k = surfaceDF[surfaceDF.class_sorted ==k]['posterior_probability']
         likelihood = prob_k
 
+        # calculate numbers of pirofiles in each
+        ncount = np.zeros(4,)
+        ntotal = 0
+        pp = likelihood.values
+        for nprof in range(0,pp.size):
+            ntotal = ntotal + 1
+            if pp[nprof]<=0.50:
+                ncount[0] = ncount[0] + 1
+            elif pp[nprof]<=0.75:
+                ncount[1] = ncount[1] + 1
+            elif pp[nprof]<=0.90:
+                ncount[2] = ncount[2] + 1
+            elif pp[nprof]<=1.00:
+                ncount[3] = ncount[3] + 1
+
+        ncount_pct = 100*ncount/ntotal
+  
+        # print
+        print('number in each pp range (0.0 <= 0.50 <= 0.75 <= 0.90 <= 1.0)')
+        print(ncount)
+        print('scaled by total in this class')
+        print(ncount_pct)
+     
         # subselect
         xplot = lon_k[::nsub]
         yplot = lat_k[::nsub]
@@ -216,9 +251,16 @@ def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF):
         proj_trans = ccrs.PlateCarree()
         ax1 = plt.axes(projection=proj)
         ax1.set_extent((-180,180,-90,-30),crs=proj_trans)
-        CS = ax1.scatter(xplot , yplot, s = 2.0, lw = 0, c = cplot, \
-                         cmap = colormap, vmin = 0, vmax = 1.0, transform = proj_trans)
-
+        CS = ax1.scatter(xplot , yplot, s = 3.0, lw = 0, c = cplot, \
+                         cmap = cmap, transform = proj_trans)
+        cb3 = mpl.colorbar.ColorbarBase(plt.gca(), \
+                                        cmap=cmap, \
+                                        norm=norm, \
+                                        ticks=bounds, \
+                                        spacing='uniform', \
+                                        orientation='vertical')
+        cb3.ax.tick_params(labelsize=22)
+        print(cb3.ax.viewLim)
         # plot fronts 
         if plotFronts:
             SAF, SACCF, SBDY, PF = None, None, None, None
@@ -242,7 +284,7 @@ def plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF):
 #       plt.text(0, 1, "Class "+str(k+1), transform = ax1.transAxes)
 
         # show plot
-        plt.savefig(address+"Plots/v2_PostProb_Class"+str(k)+\
+        plt.savefig(address+"Plots/v3_PostProb_Class"+str(k)+\
                     "_n"+str(n_comp)+".pdf",bbox_inches="tight",transparent=True)
 #       plt.show()
         ax1.clear()
@@ -414,6 +456,39 @@ def plotProfile(address, runIndex, space): # Uses traing profiles at the moment
     
 ###############################################################################
 
+def plotPCAcomponents(address, runIndex, n_comp):
+
+    # space will be 'depth', 'reduced' or 'uncentred'
+    print("Plot.plotPCAcomponents")
+
+    # get depths
+    pressures = Print.readDepth(address, runIndex) 
+
+    # read PCA object
+    with open('../Objects/PCA_object.pkl','rb') as input:
+        pca_object = pickle.load(input)
+
+    # get number of components
+    n_pca_comp = pca_object.n_components_
+    pca_comp = pca_object.components_
+
+    # define colormap
+    colorname = 'Dark2'
+    colormap = plt.get_cmap(colorname, n_pca_comp)
+    cNorm = colors.Normalize(vmin = 0, vmax = n_pca_comp)
+    scalarMap = cmx.ScalarMappable(norm = cNorm, cmap = colormap) 
+    colorVal = scalarMap.to_rgba
+
+    # line plot
+    for k in range(0, n_pca_comp):
+        fig = plt.figure(figsize=(7,7))
+        x = np.transpose(pca_comp[k])
+        y = pressures
+        plt.plot(x, y, color=colorVal(k), linestyle='solid', linewidth=5.0)
+        plt.show()
+
+###############################################################################
+
 def plotGaussiansIndividual(address, runIndex, n_comp, space, allDF, Nbins, colormap):
 
     # space will be 'depth', 'reduced' or 'uncentred'
@@ -424,12 +499,14 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, allDF, Nbins, colo
     old2new = pickle.load(pkl_file)
     pkl_file.close()
     sortEm = np.asarray(list(old2new.values()))
- 
-    # read color map
-    # now read in as an external argument
-#   colorname = 'RdYlBu_r'
-#   colormap = plt.get_cmap(colorname,n_comp)
 
+    # read PCA object
+    with open('../Objects/PCA_object.pkl','rb') as input:
+        pca_object = pickle.load(input)
+
+    # fraction of variance explained
+    pcavar = pca_object.explained_variance_ratio_ 
+ 
     # get colors for plots
     cNorm = colors.Normalize(vmin=0, vmax=n_comp)
     scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=colormap)
@@ -533,13 +610,17 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, allDF, Nbins, colo
             ax1.set_xlabel("Normalized anomaly")
         if space == 'uncentred':
             ax1.set_xlabel("Temperature /degrees")
-#       ax1.set_title("GMM n = "+\
-#                     str(n_comp)+\
-#                     ", "+space+" = "+\
-#                     str(int(depth_array[depth_array_mod[i]])))
+        ts0 = "PC" + str( int(depth_array[depth_array_mod[i]]) + 1 )
+        ts1 = "{0:.2f}".format(round(100*pcavar[i],2))
+        ts2 = '(' + ts1 + '% variance explained)' 
+        ax1.set_title( ts0 + ' ' + ts2 )
         ax1.grid(True)
         ax1.set_xlim(xmin,xmax)
-        ax1.legend(loc='best')
+
+        # only add legend to first depth
+        if i==0:
+            ax1.legend(loc='best')
+
         plt.savefig(address+\
                     "Plots/TrainHisto_Gaussians_n"+\
                     str(n_comp)+"_"+\
@@ -604,29 +685,29 @@ def plotBIC(address, repeat_bic, max_groups, trend=True):
 # Use the VBGMM to determine how many classes we should use in the GMM
 
 def plotWeights(address, runIndex):
-    # Load depth
+
+    # load depth
     depth = None
     depth = Print.readDepth(address, runIndex)
 
-    # Load Weights    
+    # load Weights    
     gmm_weights, gmm_means, gmm_covariances = None, None, None
     gmm_weights, gmm_means, gmm_covariances = Print.readGMMclasses(address, runIndex, depth, 'depth')
     
     n_comp = len(gmm_weights)
     class_array = np.arange(0,n_comp,1)
     
-    # Plot weights against class number
+    # plot weights against class number
     fig, ax1 = plt.subplots()
-    ax1.scatter(class_array, np.sort(gmm_weights)[::-1], s = 20, marker = '+', color = 'blue', label = 'Class Weights')
+    ax1.scatter(class_array+1, np.sort(gmm_weights)[::-1], s = 30, marker = '+', color = 'blue', label = 'class weights')
     ax1.axhline(y=1/(n_comp+1), linestyle='-.', color='black', label = str(np.round_(1/(n_comp+1), decimals=3))+' threshold')
     ax1.axhline(y=1/(n_comp+5), linestyle='--', color='black', label = str(np.round_(1/(n_comp+5), decimals=3))+' threshold')
     ax1.set_xlabel("Class")
-    ax1.set_xlim(-1,n_comp)
+    ax1.set_xlim(0,n_comp)
     ax1.set_ylabel("Weight")
     ax1.grid(True)
     ax1.set_title("VBGMM class weights")
     ax1.legend(loc='best')
     plt.savefig(address+"Plots/Weights_VBGMM.pdf", bbox_inches="tight",transparent=True)
-    
     
 print('Plot runtime = ', time.clock() - start_time,' s')

@@ -94,11 +94,14 @@ def PrincipalComponentAnalysis(address, runIndex, X_train, \
                                n_dimen, use_fPCA):
     print("PCA.PrincipalComponentAnalysis")
     """ Initialises the PCA object and is called in create() """
+
     # initialise PCA object
     pca = decomposition.PCA(n_components = n_dimen) 
+
     # if use_fPCA=True, interpolate into BSpline basis   
-    if use_fPCA==True:
-        X_train = convert2Bspline(depth,X_train)
+    # (not implemented yet)
+#   if use_fPCA==True:
+#       X_train = convert2Bspline(depth,X_train)
 
     # fit the PCA to the training data 
     pca.fit(X_train)   
