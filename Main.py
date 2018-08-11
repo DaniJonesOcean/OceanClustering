@@ -173,7 +173,9 @@ def mainPlot(address, address_fronts, runIndex, n_comp, plotFronts):
 #   Plot.plotProfilesByClass(address, runIndex, n_comp, allDF, colormap)
 #   Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced', allDF, nbins, colormap)
 #   Plot.plotWeights(address, runIndex)
-    Plot.plotPCAcomponents(address, runIndex, n_comp)
+#   Plot.plotPCAcomponents(address, runIndex, n_comp)
+#   Plot.plotEigenvectors(address, runIndex, allDF)
+    Plot.plotPCAmplitudeCoefficients(address, address_fronts, runIndex)
 
 #######################################################################
 

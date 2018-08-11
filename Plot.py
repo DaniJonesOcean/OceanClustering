@@ -710,4 +710,182 @@ def plotWeights(address, runIndex):
     ax1.legend(loc='best')
     plt.savefig(address+"Plots/Weights_VBGMM.pdf", bbox_inches="tight",transparent=True)
     
+###############################################################################
+# New function to plot the eigenvectors
+
+def plotEigenvectors(address, runIndex, allDF):
+    
+    # load reduced depth
+    depth = None
+    depth = Print.readDepth(address, runIndex)
+   
+    # define the mean profile
+    Tmean = allDF.groupby(['depth_index'])['temperature'].mean().values
+
+    # load the PCA object
+    pca = None
+    with open(address+'Objects/PCA_object.pkl', 'rb') as input:
+        pca = pickle.load(input)
+    pca_comp = pca.components_
+    
+    # load the Standardise and Centre object
+    stand = None
+    with open(address+"Objects/Scale_object.pkl", 'rb') as input:
+        stand = pickle.load(input)
+    pca_comp_unstand = stand.inverse_transform(pca_comp)
+
+    # plus/minus relative to mean profile
+#   Tmean_plus_PC = pca_comp_unstand
+#   Tmean_minus_PC = pca_comp_unstand
+#   for m in range(np.ma.size(pca_comp, axis=0)):
+#       Tmean_plus_PC[m] = Tmean + pca_comp_unstand[m]
+#       Tmean_minus_PC[m] = Tmean - pca_comp_unstand[m]    
+
+    #depths = (5 * (np.arange(np.ma.size(pca_components, axis=1)) )) + 15
+    for i in range(np.ma.size(pca_comp, axis=0)):
+
+        fig = plt.figure(figsize=(7,7))
+
+        # create plot
+        plt.plot(pca_comp[i,:], depth, linewidth=2.0, color='black')
+
+        # axis
+        ax = plt.gca()
+        ax.set_ylabel("Pressure (dbar)")
+#       ax.set_xlabel("Centred Eigenvector Coefficient")
+        ax.invert_yaxis()
+        ax.grid(True)
+#       ax.legend(loc='best')
+
+        # save figure
+        plt.savefig(address+"Plots/PCA_Eigenvectors_centred" + str(i).zfill(2)  + \
+                    ".pdf",bbox_inches="tight",transparent=True)
+        plt.show()
+    
+    # plot uncentred
+    #depths = (5 * (np.arange(np.ma.size(pca_components, axis=1)) )) + 15
+    for i in range(np.ma.size(pca_comp_unstand, axis=0)):
+
+        fig = plt.figure(figsize=(7,7))
+
+        # create plot
+        plt.plot(pca_comp_unstand[i,:], depth, linewidth=2.0, color='black')
+
+        # fix axes
+        ax = plt.gca()
+        ax.set_xlim(3,10)
+        ax.set_ylim(0,1000)
+        ax.set_ylabel("Pressure (dbar)")
+#       ax.set_xlabel("Eigenvector Coefficient")
+        ax.invert_yaxis()
+        ax.grid(True)
+#       ax.legend(loc='best')
+
+        # save figures
+        plt.savefig(address+"Plots/PCA_Eigenvectors_uncentred" + str(i).zfill(2) + \
+                    ".pdf",bbox_inches="tight",transparent=True)
+        plt.show()
+
+    # plot uncentred plus/minus the profiles
+    #depths = (5 * (np.arange(np.ma.size(pca_components, axis=1)) )) + 15
+    for i in range(np.ma.size(pca_comp_unstand, axis=0)):
+
+        fig = plt.figure(figsize=(7,7))
+
+        # create plot
+        yp = Tmean + pca_comp_unstand[i]
+        ym = Tmean - pca_comp_unstand[i]
+        plt.plot(yp, depth, linewidth=1.0, color='black', linestyle='--')
+        plt.plot(Tmean, depth, linewidth=2.0, color='black', linestyle='-')
+        plt.plot(ym, depth, linewidth=1.0, color='black', linestyle='--')
+
+        # fix axes
+        ax = plt.gca()
+        ax.set_xlim(0,20)
+        ax.set_ylim(0,1000)
+        ax.set_ylabel("Pressure (dbar)")
+#       ax.set_xlabel("Eigenvector Coefficient")
+        ax.invert_yaxis()
+        ax.grid(True)
+#       ax.legend(loc='best')
+
+        # save figures
+        plt.savefig(address+"Plots/PCA_Eigenvectors_withMean" + str(i).zfill(2) + \
+                    ".pdf",bbox_inches="tight",transparent=True)
+        plt.show()
+
+###########
+
+def plotPCAmplitudeCoefficients(address, address_fronts, runIndex):
+
+    # color maps
+    colorname = 'RdBu_r'
+    colormap = plt.get_cmap(colorname)
+
+    # read reduced columns
+    col_reduced = Print.readColreduced(address, runIndex)
+
+    # read the amplitude coefficients
+    [lon, lat, dynHeight, X_array, varTime] = None, None, None, None, None
+    [lon, lat, dynHeight, X_array, varTime] = Print.readPCAFromFile(address, runIndex, col_reduced=6)
+
+    # subsample
+    nsub = 10
+    xplot = lon[::nsub]
+    yplot = lat[::nsub]
+
+    # make some maps
+    for k in range(0,col_reduced):
+
+        cplot = X_array[:,k]
+        cplot = cplot[::nsub]
+
+        pmax = np.max([np.abs(np.min(cplot)), np.max(cplot)])
+        pmin = -1.0*pmax
+
+        proj = ccrs.SouthPolarStereo()
+        proj_trans = ccrs.PlateCarree()
+
+        ax1 = plt.axes(projection=proj)
+        ax1.set_extent((-180,180,-90,-30),crs=proj_trans)
+
+        CS = ax1.scatter(xplot, yplot, s = 3.0, lw = 0, c = cplot, \
+                         cmap = colormap, transform = proj_trans, vmin = pmin, vmax = pmax)
+
+        # plot fronts 
+        SAF, SACCF, SBDY, PF = None, None, None, None
+        SAF, SACCF, SBDY, PF = loadFronts(address_fronts)  
+        ax1.plot(SAF[:,0], SAF[:,1], lw = 1, ls='-', label='SAF', \
+                 color='black', transform=proj_trans)
+        ax1.plot(PF[:,0], PF[:,1], lw = 1,ls='-', label='PF', \
+                 color='grey', transform=proj_trans)
+        ax1.plot(SACCF[:,0], SACCF[:,1], lw = 1,ls='-', label='SACCF', \
+                 color='green', transform=proj_trans)
+        ax1.plot(SBDY[:,0], SBDY[:,1], lw = 1,ls='-', label='SBDY', \
+                 color='blue', transform=proj_trans)
+
+        # compute a circle in axes coordinates, which we can use as a boundary for the map.
+        theta = np.linspace(0, 2*np.pi, 100)
+        center = [0.5, 0.5]
+        radius = 0.52   # 0.46 corresponds to roughly 30S Latitude
+        verts = np.vstack([np.sin(theta), np.cos(theta)]).T
+        circle = mpath.Path(verts * radius + center)
+        ax1.set_boundary(circle, transform=ax1.transAxes)
+
+        # add features
+        ax1.gridlines()
+        ax1.coastlines()
+        ax1.set_extent((-180,180,-90,-30),crs=proj_trans)
+
+        # plot colorbar
+        colorbar = plt.colorbar(CS)
+
+        # save figures
+        plt.savefig(address+"Plots/PCA_AmplitudeCoefficientMaps" + str(k).zfill(2) + \
+                    ".pdf",bbox_inches="tight",transparent=True)
+        #plt.show()
+        plt.clf()
+
+###########
+
 print('Plot runtime = ', time.clock() - start_time,' s')
