@@ -47,7 +47,7 @@ start_time = time.clock()
 # -- GMM = performs GMM procedure (no BIC, no plots)
 # -- Plot = plots the results (located in address+ploc)
 # -- Props = only carry out the class property calcs 
-run_mode = "Plot"
+run_mode = "GMM"
 print("Running in mode: " + run_mode)
 
 # if you want to use fPCA, set this flag to 'true'
@@ -58,7 +58,7 @@ use_fPCA = False
 plotFronts = True
 
 # set parameters
-n_comp = 20         # number of classes in GMM object
+n_comp = 8           # number of classes in GMM object
 n_dimen = 0.999      # amount of variance retained in PCA
 cov_type = 'full'    # covariance type (full, tied, diag, or spherical)
 nbins = 500          # number of bins to use in histograms
@@ -87,8 +87,8 @@ if run_bic:
     conc_bic = 1        # number of samples from each grid
     size_bic = 1100     # ideal size of the BIC training set
 
-subsample_uniform = True  # indicates how the training dataset is selected
-subsample_random = False  # indicates how the training dataset is selected
+subsample_uniform = False  # indicates how the training dataset is selected
+subsample_random = True  # indicates how the training dataset is selected
 subsample_inTime = False
 
 # declare some empty variables
@@ -99,7 +99,7 @@ if subsample_uniform:
     grid = 1        # size of cell in lat/lon degrees
     conc = 1        # number of samples from each grid
 if subsample_random:
-    # size of training dataset as a fraction of whoel dataset
+    # size of training dataset as a fraction of whole dataset
     fraction_train = 0.1  
 if subsample_inTime:
     inTime_start = 0.0      # WRONG AT THE MOMENT
@@ -156,26 +156,31 @@ def mainPlot(address, address_fronts, runIndex, n_comp, plotFronts):
 
     # if the required directory structure doesn't exist, create it
     makeDirectoryStructure(address)
+
+    # set some BIC constants for plotting
+    repeat_bic = 50
+    max_groups = 20
   
     # set one colormap
-#   colormap = plt.get_cmap('RdBu_r', n_comp)
+    colormap = plt.get_cmap('RdBu_r', n_comp)
 
 #   # read data frame with profiles and sorted labels
-#   print('loading data frame (this could take a while)')
-#   frame_store = address + 'Objects/AllProfiles.pkl'
-#   allDF = pd.read_pickle(frame_store, compression='infer')
+    print('loading data frame (this could take a while)')
+    frame_store = address + 'Objects/AllProfiles.pkl'
+    allDF = pd.read_pickle(frame_store, compression='infer')
 
 #   # make some plots
 #   print('creating plots')
-#   Plot.plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF, colormap)
-#   Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF, colormap)
+#   Plot.plotBIC(address, repeat_bic, max_groups)
+    Plot.plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF, colormap)
+    Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF, colormap)
 #   Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF)
 #   Plot.plotProfilesByClass(address, runIndex, n_comp, allDF, colormap)
 #   Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced', allDF, nbins, colormap)
 #   Plot.plotWeights(address, runIndex)
 #   Plot.plotPCAcomponents(address, runIndex, n_comp)
 #   Plot.plotEigenvectors(address, runIndex, allDF)
-    Plot.plotPCAmplitudeCoefficients(address, address_fronts, runIndex)
+#   Plot.plotPCAmplitudeCoefficients(address, address_fronts, runIndex)
 
 #######################################################################
 
@@ -266,9 +271,9 @@ def makeDirectoryStructure(address):
 
 # main program loop 
 if (run_mode=="BIC"):
-    Bic.main(address, filename_raw_data,subsample_bic, repeat_bic, max_groups, \
-        grid_bic, conc_bic, size_bic, n_dimen, fraction_nan_samples, \
-        fraction_nan_depths, cov_type)
+#   Bic.main(address, filename_raw_data,subsample_bic, repeat_bic, max_groups, \
+#       grid_bic, conc_bic, size_bic, n_dimen, fraction_nan_samples, \
+#       fraction_nan_depths, cov_type)
     Plot.plotBIC(address, repeat_bic, max_groups)
 elif (run_mode=="GMM"):
     main()

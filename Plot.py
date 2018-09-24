@@ -83,11 +83,15 @@ def plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF, colormap
         ax1.plot(SACCF[:,0], SACCF[:,1], lw = 1,ls='-', label='SACCF', \
                  color='green', transform=proj_trans)
         ax1.plot(SBDY[:,0], SBDY[:,1], lw = 1,ls='-', label='SBDY', \
-                 color='blue', transform=proj_trans)
+                 color=(218/256,165/256,32/256), transform=proj_trans)
         
         #ax1.legend(loc='upper left')
-        ax1.legend(bbox_to_anchor=( 1.25,1.2), ncol=4, \
-                   columnspacing = 0.8)
+        leg = ax1.legend(bbox_to_anchor=( 1.25,1.2), ncol=4, \
+                         columnspacing = 0.8)
+
+        # set the linewidth of each legend object
+        for legobj in leg.legendHandles:
+            legobj.set_linewidth(5.0)
 
     # compute a circle in axes coordinates, 
     # which we can use as a boundary for the map.
@@ -138,7 +142,7 @@ def plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF, colormap):
     pskip = 10
 
     # plot the data in map form - individual
-    # now passed in as an argument
+    # now passed in as an argument (can probably delete this)
 #   colorname = 'RdYlBu_r'
 #   colormap = plt.get_cmap(colorname,n_comp)
 
@@ -154,6 +158,9 @@ def plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF, colormap):
     yplot = yplot[::pskip]
     cplot = cplot[::pskip]
 
+    # convert to cm
+    yplot = 100*yplot
+
     # shift index for plotting
     cplot = cplot + 1
 
@@ -164,10 +171,16 @@ def plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF, colormap):
     CS = plt.scatter(xplot, yplot, s = 2.0, c = cplot, cmap = colormap, \
                      vmin = 0.5, vmax = n_comp+0.5, lw = 0)
     plt.xlim((-180, 180)) 
-    plt.ylim((0.02, 0.18)) 
+    plt.ylim((2.0, 18.0)) 
     plt.xlabel('Longitude')
-    plt.ylabel('Dynamic height (m)')
+    plt.ylabel('Dynamic height (cm)')
     plt.grid(color = '0.9')
+
+    # approximate boundaries (using Kim and Orsi 2014)
+    # SAF is between 0.70-0.87 dyn m / 70-87 dyn cm / 7.0-8.7 cm
+    # PF is between 0.50-0.62 dyn m / 50-62 dyn cm / 5.0-6.2 cm
+    # sACCf is between 0.36-0.45 dyn m / 36-45 dyn cm / 3.6-4.5 cm  
+    # SBdy is between 0.31-0.38 dyn m / 31-38 dyn cm / 3.1-3.8 cm
 
     # fix colorbar
     colorbar = plt.colorbar(CS)
@@ -630,7 +643,7 @@ def plotGaussiansIndividual(address, runIndex, n_comp, space, allDF, Nbins, colo
    
 ###############################################################################    
 
-def plotBIC(address, repeat_bic, max_groups, trend=True): 
+def plotBIC(address, repeat_bic, max_groups, trend=False): 
     # Load the data and define variables first
     bic_many, bic_mean, bic_stdev, n_mean, n_stdev, n_min = None, None, None, None, None, None
     bic_many, bic_mean, bic_stdev, n_mean, n_stdev, n_min = Print.readBIC(address, repeat_bic)
@@ -642,7 +655,7 @@ def plotBIC(address, repeat_bic, max_groups, trend=True):
     
     # Plot the results
     fig, ax1 = plt.subplots()
-    ax1.errorbar(n_comp_array, bic_mean, yerr = bic_stdev, lw = 2, ecolor = 'black', label = 'Mean BIC Score')
+    ax1.errorbar(n_comp_array, bic_mean, yerr = bic_stdev, lw = 2, ecolor = 'black', label = 'Mean BIC score')
     
     if trend:
         # Plot the trendline
@@ -664,21 +677,21 @@ def plotBIC(address, repeat_bic, max_groups, trend=True):
         #ax1.axvline(x=x_min, linestyle=':', color='black', label = 'Exponential Fit min = '+str(np.round_(x_min, decimals=1)))
 
     # Plot the individual and minimum values
-    ax1.axvline(x=n_mean, linestyle='--', color='black', label = 'n_mean_min = '+str(n_mean))
-    ax1.axvline(x=n_min, linestyle='-.', color='black', label = 'n_bic_min = '+str(n_min))
-    for r in range(repeat_bic):
-        ax1.plot(n_comp_array, bic_many[r,:], alpha = 0.3, color = 'grey')
+    #ax1.axvline(x=n_mean, linestyle='--', color='black', label = 'n_mean_min = '+str(n_mean))
+    #ax1.axvline(x=n_min, linestyle='-.', color='black', label = 'n_bic_min = '+str(n_min))
+    #for r in range(repeat_bic):
+    #    ax1.plot(n_comp_array, bic_many[r,:], alpha = 0.3, color = 'grey')
         
-    ax1.set_ylabel("BIC value")
-    ax1.set_xlabel("Number of classes in GMM")
+    ax1.set_ylabel("BIC score")
+    ax1.set_xlabel("Number of classes (k)")
     ax1.grid(True)
-    ax1.set_title("BIC values for GMM with different number of components")
+    ax1.set_title("BIC values for GMM with different numbers of classes")
     ax1.set_ylim(min(bic_mean)*0.97, min(bic_mean)*1.07)
     ax1.legend(loc='best')
     if trend:
         plt.savefig(address+"Plots/BIC_trend.pdf",bbox_inches="tight",transparent=True)
     else:
-        plt.savefig(address+"Plots/BIC.pdf",bbox_inches="tight",transparent=True)
+        plt.savefig(address+"Plots/BIC_revision2.pdf",bbox_inches="tight",transparent=True)
 #   plt.show()
     
 ###############################################################################
