@@ -47,7 +47,7 @@ start_time = time.clock()
 # -- GMM = performs GMM procedure (no BIC, no plots)
 # -- Plot = plots the results (located in address+ploc)
 # -- Props = only carry out the class property calcs 
-run_mode = "GMM"
+run_mode = "Props"
 print("Running in mode: " + run_mode)
 
 # if you want to use fPCA, set this flag to 'true'
@@ -87,8 +87,8 @@ if run_bic:
     conc_bic = 1        # number of samples from each grid
     size_bic = 1100     # ideal size of the BIC training set
 
-subsample_uniform = False  # indicates how the training dataset is selected
-subsample_random = True  # indicates how the training dataset is selected
+subsample_uniform = True  # indicates how the training dataset is selected
+subsample_random = False  # indicates how the training dataset is selected
 subsample_inTime = False
 
 # declare some empty variables
@@ -97,7 +97,7 @@ None, None, None, None, None
 
 if subsample_uniform:
     grid = 1        # size of cell in lat/lon degrees
-    conc = 1        # number of samples from each grid
+    conc = 6        # number of samples from each grid
 if subsample_random:
     # size of training dataset as a fraction of whole dataset
     fraction_train = 0.1  
@@ -174,8 +174,8 @@ def mainPlot(address, address_fronts, runIndex, n_comp, plotFronts):
 #   Plot.plotBIC(address, repeat_bic, max_groups)
     Plot.plotMapCircular(address, address_fronts, plotFronts, n_comp, allDF, colormap)
     Plot.plotByDynHeight(address, address_fronts, runIndex, n_comp, allDF, colormap)
-#   Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF)
-#   Plot.plotProfilesByClass(address, runIndex, n_comp, allDF, colormap)
+    Plot.plotPosterior(address, address_fronts, runIndex, n_comp, plotFronts, allDF)
+    Plot.plotProfilesByClass(address, runIndex, n_comp, allDF, colormap)
 #   Plot.plotGaussiansIndividual(address, runIndex, n_comp, 'reduced', allDF, nbins, colormap)
 #   Plot.plotWeights(address, runIndex)
 #   Plot.plotPCAcomponents(address, runIndex, n_comp)
